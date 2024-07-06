@@ -10,6 +10,9 @@
 #include "lv_disp.h"
 #include "../misc/lv_gc.h"
 
+#include "stdbool.h"
+#include "stdio.h"
+
 /*********************
  *      DEFINES
  *********************/

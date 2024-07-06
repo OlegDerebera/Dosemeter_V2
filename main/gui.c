@@ -13,15 +13,23 @@
 extern void table_event_cb(lv_event_t* e);
 extern void table_widget_event_cb(lv_event_t* e);
 extern void draw_event_cb(lv_event_t * e);
+extern void table_settings_event_cb(lv_event_t* e);
+extern void table_coef_event_cb(lv_event_t* e);
+extern void tabview_cb(lv_event_t * e);
 
 extern const char *TAG;
 
 extern lv_group_t * g_menu;
 extern lv_group_t* g_empty;
 extern lv_group_t *g_widgets;
+extern lv_group_t* g_settings;
+extern lv_group_t* g_coef;
+extern lv_group_t* g_tab;
+extern lv_group_t* g_tab_btn;
 extern lv_obj_t * scr1;
 lv_obj_t * obj2;
 static lv_style_t style2;
+static lv_style_t style_bg;
 static lv_style_t style_greek;
 static lv_style_t style_unit;
 extern char str_adc[10];
@@ -49,12 +57,23 @@ extern lv_chart_series_t * ser_gamma;
 extern lv_chart_series_t * ser_neutron;
 extern lv_obj_t* table;
 extern lv_obj_t* table_widgets;
+extern lv_obj_t* table_settings;
+extern lv_obj_t* table_coef;
 extern lv_obj_t* screenMenu;
 extern lv_obj_t* screenWidgets;
+extern lv_obj_t* screenSettings;
+extern lv_obj_t* screenCoef;
+extern lv_obj_t* screenTab;
+extern lv_obj_t* tabview;
 //-----------------------------
-const char* str = "LOL";
+char* str[7];
 extern const char unit_arr[3][6];
-extern uint8_t unit_num;
+extern const char theme_arr[3][6];
+extern uint8_t unit_num, theme_num;
+extern uint16_t a_coeff;
+extern uint16_t b_coeff;
+extern uint16_t g_coeff;
+extern uint16_t n_coeff;
 //extern widget_options options;
 //extern const lv_font_t montserrat_55;
 
@@ -103,6 +122,8 @@ static void change_event_cb(lv_event_t * e)
     if(chk) lv_table_clear_cell_ctrl(obj, row, 0, LV_TABLE_CELL_CTRL_CUSTOM_1);
     else lv_table_add_cell_ctrl(obj, row, 0, LV_TABLE_CELL_CTRL_CUSTOM_1);
 }
+
+
 
 void my_demo2(lv_disp_t *disp)
 {
@@ -162,6 +183,9 @@ void my_demo2(lv_disp_t *disp)
     lv_style_set_text_font(&style_unit, &lv_font_montserrat_14);
     lv_style_set_text_color(&style_unit, lv_color_white());
 
+    lv_style_init(&style_bg);
+    lv_style_set_bg_color(&style_bg, lv_color_black());
+
 
     //Home screen
     obj2 = lv_obj_create(scr1);
@@ -170,6 +194,7 @@ void my_demo2(lv_disp_t *disp)
     lv_obj_set_scrollbar_mode(scr1, LV_SCROLLBAR_MODE_OFF);
     lv_obj_align(obj2, LV_ALIGN_CENTER, 0, 0);
     lv_obj_set_style_bg_color(obj2, lv_color_black(), LV_PART_MAIN);
+    //lv_obj_add_style(obj2, &style_bg, LV_PART_MAIN);
 
 
     label_adc = lv_label_create(obj2);
@@ -191,7 +216,8 @@ void my_demo2(lv_disp_t *disp)
 	//Create a chart
     chart = lv_chart_create(obj2);
     lv_obj_set_size(chart, 300, 110);
-    lv_obj_set_style_bg_color(chart, lv_color_black(), LV_PART_MAIN);
+    //lv_obj_set_style_bg_color(chart, lv_color_black(), LV_PART_MAIN);ff
+    lv_obj_add_style(chart, &style_bg, LV_PART_MAIN);
     lv_chart_set_div_line_count(chart, 0, 0);
     lv_obj_align(chart, LV_ALIGN_BOTTOM_MID, 0, 0);
     lv_chart_set_range(chart, LV_CHART_AXIS_PRIMARY_Y, 0, 4000);
@@ -208,33 +234,48 @@ void my_demo2(lv_disp_t *disp)
     //table
     lv_group_set_default(g_menu);
     screenMenu = lv_obj_create(NULL);
+    lv_obj_set_size(screenMenu, lv_pct(103), lv_pct(103));
+
+    lv_obj_align(screenMenu, LV_ALIGN_CENTER, 0, 0);
     lv_obj_set_scrollbar_mode(screenMenu, LV_SCROLLBAR_MODE_OFF);
     lv_obj_set_style_bg_color(screenMenu, lv_color_black(), LV_PART_MAIN);
+    //lv_obj_add_style(screenMenu, &style_bg, LV_PART_MAIN);
+
 	table = lv_table_create(screenMenu);
 	lv_obj_clear_flag(table, LV_OBJ_FLAG_SCROLLABLE);
 	//lv_obj_add_state(table, LV_STATE_EDITED);
 	lv_table_set_cell_value(table, 0, 0, "Start");
-    lv_table_set_cell_value(table, 1, 0, "Set temperature");
-    lv_table_set_cell_value(table, 2, 0, "PID");
-    lv_table_set_cell_value(table, 0, 1, unit_arr[unit_num]);
+	lv_table_set_cell_value(table, 0, 1, unit_arr[unit_num]);
+    lv_table_set_cell_value(table, 1, 0, "Coeff");
+    lv_table_add_cell_ctrl(table, 1, 0, LV_TABLE_CELL_CTRL_MERGE_RIGHT);
     //lv_table_set_cell_value(table, 1, 1, "Finish");
-    lv_table_set_cell_value(table, 2, 1, "Finish");
-    lv_table_set_cell_value(table, 3, 0, "Merge");
+
+    lv_table_set_cell_value(table, 2, 0, "Widgets");
+    lv_table_add_cell_ctrl(table, 2, 0, LV_TABLE_CELL_CTRL_MERGE_RIGHT);
+
+    lv_table_set_cell_value(table, 3, 0, "Settings");
     lv_table_add_cell_ctrl(table, 3, 0, LV_TABLE_CELL_CTRL_MERGE_RIGHT);
-    lv_table_add_cell_ctrl(table, 3, 0, LV_TABLE_CELL_CTRL_CUSTOM_1);
-    lv_table_set_cell_value(table, 4, 0, "Widgets");
+
+    lv_table_set_cell_value(table, 4, 0, "Tabview");
     lv_table_add_cell_ctrl(table, 4, 0, LV_TABLE_CELL_CTRL_MERGE_RIGHT);
 
+    //lv_obj_add_style(table, &style_bg, LV_PART_MAIN | LV_PART_ITEMS);
 
-    lv_obj_center(table);
+    //lv_obj_align(table, LV_ALIGN_CENTER, 3, 1);
+    //lv_obj_set_style_width(table, 340, LV_PART_MAIN);
+    //lv_obj_set_style_height(table, 175, LV_PART_MAIN);
     //lv_obj_set_height(table, 220);
     //lv_obj_set_width(table,  300);
     lv_obj_set_size(table, lv_pct(103), lv_pct(103));
-    lv_table_set_col_width(table, 0, 160);
-    lv_table_set_col_width(table, 1, 160);
-    lv_obj_set_style_bg_color(table, lv_color_black(), LV_PART_MAIN);
-    lv_obj_set_style_bg_color(table, lv_color_black(), LV_PART_ITEMS);
+    lv_table_set_col_width(table, 0, 163);
+    lv_table_set_col_width(table, 1, 163);
+    lv_obj_center(table);
+    //lv_obj_set_style_bg_color(table, lv_color_black(), LV_PART_MAIN);
+    //lv_obj_set_style_bg_color(table, lv_color_black(), LV_PART_ITEMS);
+    lv_obj_add_style(table, &style_bg, LV_PART_ITEMS);
+    lv_obj_add_style(table, &style_bg, LV_PART_MAIN);
     lv_obj_set_style_border_width(table, 0, LV_PART_ITEMS);
+    lv_obj_set_style_border_width(table, 0, LV_PART_MAIN);
     lv_obj_set_style_text_font(table, &lv_font_montserrat_16, LV_PART_ITEMS);
     //temp_label_act = lv_label_create(lv_scr_act());
     //lv_label_set_text(temp_label_act, "The last button event:\nNone");
@@ -246,15 +287,19 @@ void my_demo2(lv_disp_t *disp)
     lv_group_set_default(g_widgets);
 
     lv_obj_set_scrollbar_mode(screenWidgets, LV_SCROLLBAR_MODE_OFF);
-    lv_obj_set_style_bg_color(screenWidgets, lv_color_black(), LV_PART_MAIN);
+    //lv_obj_set_style_bg_color(screenWidgets, lv_color_black(), LV_PART_MAIN);ff
+    lv_obj_add_style(screenWidgets, &style_bg, LV_PART_MAIN);
 	table_widgets = lv_table_create(screenWidgets);
 	lv_obj_clear_flag(table_widgets, LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_center(table_widgets);
     lv_obj_set_size(table_widgets, lv_pct(103), lv_pct(103));
     lv_table_set_col_width(table_widgets, 0, 320);
-    lv_obj_set_style_bg_color(table_widgets, lv_color_black(), LV_PART_MAIN);
-    lv_obj_set_style_bg_color(table_widgets, lv_color_black(), LV_PART_ITEMS);
+    //lv_obj_set_style_bg_color(table_widgets, lv_color_black(), LV_PART_MAIN);ff
+    //lv_obj_set_style_bg_color(table_widgets, lv_color_black(), LV_PART_ITEMS);ff
+    lv_obj_add_style(table_widgets, &style_bg, LV_PART_ITEMS);
+    lv_obj_add_style(table_widgets, &style_bg, LV_PART_MAIN);
     lv_obj_set_style_border_width(table_widgets, 0, LV_PART_ITEMS);
+    lv_obj_set_style_border_width(table_widgets, 0, LV_PART_MAIN);
 
     lv_table_set_cell_value(table_widgets, 0, 0, "Alpha");
     lv_table_set_cell_value(table_widgets, 1, 0, "Beta");
@@ -269,10 +314,138 @@ void my_demo2(lv_disp_t *disp)
     vTaskDelay(15);
     lv_obj_add_event_cb(table_widgets, draw_event_cb_2, LV_EVENT_DRAW_PART_END, NULL);
     lv_obj_add_event_cb(table_widgets, table_widget_event_cb, LV_EVENT_ALL, NULL);
+
+    // table for coeff
+    lv_group_set_default(g_coef);
+    screenCoef = lv_obj_create(NULL);
+    lv_obj_set_scrollbar_mode(screenCoef, LV_SCROLLBAR_MODE_OFF);
+    //lv_obj_set_style_bg_color(screenCoef, lv_color_black(), LV_PART_MAIN);ff
+    lv_obj_add_style(screenCoef, &style_bg, LV_PART_MAIN);
+	table_coef = lv_table_create(screenCoef);
+	lv_obj_clear_flag(table_coef, LV_OBJ_FLAG_SCROLLABLE);
+	//lv_obj_add_state(table, LV_STATE_EDITED);
+	lv_table_set_cell_value(table_coef, 0, 0, "C alpha");
+    lv_table_set_cell_value(table_coef, 1, 0, "C beta");
+    lv_table_set_cell_value(table_coef, 2, 0, "C gamma");
+    lv_table_set_cell_value(table_coef, 3, 0, "C neutron");
+    sprintf(str, "%d", a_coeff);
+    lv_table_set_cell_value(table_coef, 0, 1, str);
+    sprintf(str, "%d", b_coeff);
+    lv_table_set_cell_value(table_coef, 1, 1, str);
+    sprintf(str, "%d", g_coeff);
+    lv_table_set_cell_value(table_coef, 2, 1, str);
+    sprintf(str, "%d", n_coeff);
+    lv_table_set_cell_value(table_coef, 3, 1, str);
+
+    lv_obj_center(table_coef);
+    //lv_obj_set_height(table, 220);
+    //lv_obj_set_width(table,  300);
+    lv_obj_set_size(table_coef, lv_pct(103), lv_pct(103));
+    lv_table_set_col_width(table_coef, 0, 160);
+    lv_table_set_col_width(table_coef, 1, 160);
+    //lv_obj_set_style_bg_color(table_coef, lv_color_black(), LV_PART_MAIN);
+    //lv_obj_set_style_bg_color(table_coef, lv_color_black(), LV_PART_ITEMS);
+    lv_obj_add_style(table_coef, &style_bg, LV_PART_ITEMS);
+    lv_obj_add_style(table_coef, &style_bg, LV_PART_MAIN);
+    lv_obj_set_style_border_width(table_coef, 0, LV_PART_ITEMS);
+    lv_obj_set_style_border_width(table_coef, 0, LV_PART_MAIN);
+    lv_obj_set_style_text_font(table_coef, &lv_font_montserrat_16, LV_PART_ITEMS);
+    lv_obj_add_event_cb(table_coef, table_coef_event_cb, LV_EVENT_ALL, NULL);
+
+    //table for settings
+    lv_group_set_default(g_settings);
+    screenSettings = lv_obj_create(NULL);
+    lv_obj_set_scrollbar_mode(screenSettings, LV_SCROLLBAR_MODE_OFF);
+    //lv_obj_set_style_bg_color(screenSettings, lv_color_black(), LV_PART_MAIN);ff
+    lv_obj_add_style(screenSettings, &style_bg, LV_PART_MAIN);
+
+	table_settings = lv_table_create(screenSettings);
+	lv_obj_clear_flag(table_settings, LV_OBJ_FLAG_SCROLLABLE);
+	//lv_obj_add_state(table, LV_STATE_EDITED);
+	lv_table_set_cell_value(table_settings, 0, 0, "Theme");
+    lv_table_set_cell_value(table_settings, 1, 0, "Language");
+    lv_table_set_cell_value(table_settings, 2, 0, "Bluetooth");
+    lv_table_set_cell_value(table_settings, 3, 0, "Sidebar");
+    lv_table_set_cell_value(table_settings, 4, 0, "Threshold 1");
+    lv_table_set_cell_value(table_settings, 5, 0, "Threshold 2");
+    lv_table_set_cell_value(table_settings, 6, 0, "Threshold 3");
+    lv_table_set_cell_value(table_settings, 0, 1, theme_arr[theme_num]);
+    lv_table_set_cell_value(table_settings, 1, 1, theme_arr[theme_num]);
+    lv_table_add_cell_ctrl(table_settings, 2, 0, LV_TABLE_CELL_CTRL_MERGE_RIGHT);
+    lv_table_add_cell_ctrl(table_settings, 3, 0, LV_TABLE_CELL_CTRL_MERGE_RIGHT);
+    /*sprintf(str, "%d", a_coeff);
+    lv_table_set_cell_value(table_settings, 0, 1, str);
+    sprintf(str, "%d", b_coeff);
+    lv_table_set_cell_value(table_settings, 1, 1, str);
+    sprintf(str, "%d", g_coeff);
+    lv_table_set_cell_value(table_settings, 2, 1, str);
+    sprintf(str, "%d", n_coeff);
+    lv_table_set_cell_value(table_settings, 3, 1, str);*/
+
+    lv_obj_center(table_settings);
+    //lv_obj_set_height(table, 220);
+    //lv_obj_set_width(table,  300);
+    lv_obj_set_size(table_settings, lv_pct(103), lv_pct(103));
+    lv_table_set_col_width(table_settings, 0, 160);
+    lv_table_set_col_width(table_settings, 1, 160);
+    //lv_obj_set_style_bg_color(table_settings, lv_color_black(), LV_PART_MAIN);ff
+    //lv_obj_set_style_bg_color(table_settings, lv_color_black(), LV_PART_ITEMS);ff
+    lv_obj_add_style(table_settings, &style_bg, LV_PART_ITEMS);
+    lv_obj_add_style(table_settings, &style_bg, LV_PART_MAIN);
+    lv_obj_set_style_border_width(table_settings, 0, LV_PART_ITEMS);
+    lv_obj_set_style_border_width(table_settings, 0, LV_PART_MAIN);
+    lv_obj_set_style_text_font(table_settings, &lv_font_montserrat_16, LV_PART_ITEMS);
+    lv_obj_add_event_cb(table_settings, table_settings_event_cb, LV_EVENT_ALL, NULL);
+
+    //table for tab
+    lv_group_set_default(g_tab);
+    screenTab = lv_obj_create(NULL);
+    lv_obj_set_scrollbar_mode(screenTab, LV_SCROLLBAR_MODE_OFF);
+    //lv_obj_set_style_bg_color(screenSettings, lv_color_black(), LV_PART_MAIN);ff
+    lv_obj_add_style(screenTab, &style_bg, LV_PART_MAIN);
+
+    tabview = lv_tabview_create(screenTab, LV_DIR_LEFT, 80);
+    lv_obj_set_style_bg_color(tabview, lv_palette_lighten(LV_PALETTE_RED, 2), 0);
+
+    lv_obj_t * tab_btns = lv_tabview_get_tab_btns(tabview);
+    lv_obj_set_style_bg_color(tab_btns, lv_palette_darken(LV_PALETTE_GREY, 3), 0);
+    lv_obj_set_style_text_color(tab_btns, lv_palette_lighten(LV_PALETTE_GREY, 5), 0);
+    lv_obj_set_style_border_side(tab_btns, LV_BORDER_SIDE_RIGHT, LV_PART_ITEMS | LV_STATE_CHECKED);
+
+    /*Add 3 tabs (the tabs are page (lv_page) and can be scrolled*/
+    lv_obj_t * tab1 = lv_tabview_add_tab(tabview, "Tab 1");
+    lv_obj_t * tab2 = lv_tabview_add_tab(tabview, "Tab 2");
+    lv_obj_t * tab3 = lv_tabview_add_tab(tabview, "Tab 3");
+    lv_obj_t * tab4 = lv_tabview_add_tab(tabview, "Tab 4");
+    lv_obj_t * tab5 = lv_tabview_add_tab(tabview, "Tab 5");
+
+    lv_obj_set_style_bg_color(tab2, lv_palette_lighten(LV_PALETTE_AMBER, 3), 0);
+    lv_obj_set_style_bg_opa(tab2, LV_OPA_COVER, 0);
+
+    /*Add content to the tabs*/
+    lv_obj_t * label = lv_label_create(tab1);
+    lv_label_set_text(label, "First tab");
+
+
+    label = lv_label_create(tab2);
+    lv_label_set_text(label, "Second tab");
+
+    label = lv_label_create(tab3);
+    lv_label_set_text(label, "Third tab");
+
+    label = lv_label_create(tab4);
+    lv_label_set_text(label, "Forth tab");
+
+    label = lv_label_create(tab5);
+    lv_label_set_text(label, "Fifth tab");
+
+    lv_obj_add_event_cb(tabview, tabview_cb, LV_EVENT_ALL, 0);
+    lv_group_set_default(g_tab_btn);
+    lv_obj_t* button_tab = lv_btn_create(tab1);
     //lv_obj_add_event_cb(table_widgets, change_event_cb, LV_EVENT_VALUE_CHANGED, NULL);
     //vTaskDelay(3000 / portTICK_PERIOD_MS);
 	lv_scr_load_anim(scr1, LV_SCR_LOAD_ANIM_FADE_OUT, 500, 1000, true);
-	//lv_obj_set_style_bg_color(obj1, lv_color_white(), LV_PART_MAIN);
+	////lv_obj_set_style_bg_color(obj1, lv_color_white(), LV_PART_MAIN);
 
 }//my_demo2
 
@@ -297,7 +470,7 @@ void redraw_widgets(widget_options* opts){
     lv_obj_set_scrollbar_mode(obj2, LV_SCROLLBAR_MODE_OFF);
     lv_obj_set_scrollbar_mode(scr1, LV_SCROLLBAR_MODE_OFF);
     lv_obj_align(obj2, LV_ALIGN_CENTER, 0, 0);
-    lv_obj_set_style_bg_color(obj2, lv_color_black(), LV_PART_MAIN);*/
+    //lv_obj_set_style_bg_color(obj2, lv_color_black(), LV_PART_MAIN);*/
     opts->alpha_ready = 0;
     opts->beta_ready = 0;
     opts->gamma_ready = 0;
@@ -329,7 +502,8 @@ void redraw_widgets(widget_options* opts){
 				//Create a chart
 				chart_alpha = lv_chart_create(obj2);
 				lv_obj_set_size(chart_alpha, 300, 75);
-				lv_obj_set_style_bg_color(chart_alpha, lv_color_black(), LV_PART_MAIN);
+				//lv_obj_set_style_bg_color(chart_alpha, lv_color_black(), LV_PART_MAIN);ff
+				lv_obj_add_style(chart, &style_bg, LV_PART_MAIN);
 				lv_chart_set_div_line_count(chart_alpha, 0, 0);
 				lv_obj_align(chart_alpha, LV_ALIGN_BOTTOM_MID, 0, 0);
 				lv_obj_set_style_border_width(chart_alpha, 1, LV_PART_MAIN);
@@ -363,7 +537,8 @@ void redraw_widgets(widget_options* opts){
 
 					chart_alpha = lv_chart_create(obj2);
 					lv_obj_set_size(chart_alpha, 140, 70);
-					lv_obj_set_style_bg_color(chart_alpha, lv_color_black(), LV_PART_MAIN);
+					//lv_obj_set_style_bg_color(ffchart_alpha, lv_color_black(), LV_PART_MAIN);
+					lv_obj_add_style(chart_alpha, &style_bg, LV_PART_MAIN);
 					lv_chart_set_div_line_count(chart_alpha, 0, 0);
 					lv_obj_align(chart_alpha, LV_ALIGN_TOP_RIGHT, 0, 0);
 					lv_obj_set_style_border_width(chart_alpha, 1, LV_PART_MAIN);
@@ -399,7 +574,8 @@ void redraw_widgets(widget_options* opts){
 
 					chart_alpha = lv_chart_create(obj2);
 					lv_obj_set_size(chart_alpha, 140, 70);
-					lv_obj_set_style_bg_color(chart_alpha, lv_color_black(), LV_PART_MAIN);
+					//lv_obj_set_style_bg_color(chart_alpha, lv_color_black(), LV_PART_MAIN);ff
+					lv_obj_add_style(chart_alpha, &style_bg, LV_PART_MAIN);
 					lv_chart_set_div_line_count(chart_alpha, 0, 0);
 					lv_obj_align(chart_alpha, LV_ALIGN_BOTTOM_RIGHT, 0, 0);
 					lv_obj_set_style_border_width(chart_alpha, 1, LV_PART_MAIN);
@@ -439,7 +615,8 @@ void redraw_widgets(widget_options* opts){
 
 					chart_alpha = lv_chart_create(obj2);
 					lv_obj_set_size(chart_alpha, 140, 53);
-					lv_obj_set_style_bg_color(chart_alpha, lv_color_black(), LV_PART_MAIN);
+					//lv_obj_set_style_bg_color(fffchart_alpha, lv_color_black(), LV_PART_MAIN);
+					lv_obj_add_style(chart_alpha, &style_bg, LV_PART_MAIN);
 					lv_chart_set_div_line_count(chart_alpha, 0, 0);
 					lv_obj_align(chart_alpha, LV_ALIGN_TOP_RIGHT, 0, -5);
 					lv_obj_set_style_border_width(chart_alpha, 1, LV_PART_MAIN);
@@ -485,7 +662,8 @@ void redraw_widgets(widget_options* opts){
 
 				chart_alpha = lv_chart_create(obj2);
 				lv_obj_set_size(chart_alpha, 140, 40);
-				lv_obj_set_style_bg_color(chart_alpha, lv_color_black(), LV_PART_MAIN);
+				//lv_obj_set_style_bg_color(cffhart_alpha, lv_color_black(), LV_PART_MAIN);
+				lv_obj_add_style(chart_alpha, &style_bg, LV_PART_MAIN);
 				lv_chart_set_div_line_count(chart_alpha, 0, 0);
 				lv_obj_align(chart_alpha, LV_ALIGN_TOP_RIGHT, 0, -8);
 				lv_obj_set_style_border_width(chart_alpha, 1, LV_PART_MAIN);
@@ -543,7 +721,8 @@ void redraw_widgets(widget_options* opts){
 				//Create a chart
 				chart_beta = lv_chart_create(obj2);
 				lv_obj_set_size(chart_beta, 300, 75);
-				lv_obj_set_style_bg_color(chart_beta, lv_color_black(), LV_PART_MAIN);
+				//lv_obj_set_style_bg_color(cffhart_beta, lv_color_black(), LV_PART_MAIN);
+				lv_obj_add_style(chart_beta, &style_bg, LV_PART_MAIN);
 				lv_chart_set_div_line_count(chart_beta, 0, 0);
 				lv_obj_align(chart_beta, LV_ALIGN_BOTTOM_MID, 0, 0);
 				lv_obj_set_style_border_width(chart_beta, 1, LV_PART_MAIN);
@@ -575,7 +754,8 @@ void redraw_widgets(widget_options* opts){
 
 					chart_beta = lv_chart_create(obj2);
 					lv_obj_set_size(chart_beta, 140, 70);
-					lv_obj_set_style_bg_color(chart_beta, lv_color_black(), LV_PART_MAIN);
+					//lv_obj_set_style_bg_color(chaffrt_beta, lv_color_black(), LV_PART_MAIN);
+					lv_obj_add_style(chart_beta, &style_bg, LV_PART_MAIN);
 					lv_chart_set_div_line_count(chart_beta, 0, 0);
 					lv_obj_align(chart_beta, LV_ALIGN_TOP_RIGHT, 0, 0);
 					lv_obj_set_style_border_width(chart_beta, 1, LV_PART_MAIN);
@@ -610,7 +790,8 @@ void redraw_widgets(widget_options* opts){
 
 					chart_beta = lv_chart_create(obj2);
 					lv_obj_set_size(chart_beta, 140, 70);
-					lv_obj_set_style_bg_color(chart_beta, lv_color_black(), LV_PART_MAIN);
+					//lv_obj_set_style_bg_color(chffart_beta, lv_color_black(), LV_PART_MAIN);
+					lv_obj_add_style(chart_beta, &style_bg, LV_PART_MAIN);
 					lv_chart_set_div_line_count(chart_beta, 0, 0);
 					lv_obj_align(chart_beta, LV_ALIGN_BOTTOM_RIGHT, 0, 0);
 					lv_obj_set_style_border_width(chart_beta, 1, LV_PART_MAIN);
@@ -650,7 +831,8 @@ void redraw_widgets(widget_options* opts){
 
 					chart_beta = lv_chart_create(obj2);
 					lv_obj_set_size(chart_beta, 140, 53);
-					lv_obj_set_style_bg_color(chart_beta, lv_color_black(), LV_PART_MAIN);
+					//lv_obj_set_style_bg_color(chaffrt_beta, lv_color_black(), LV_PART_MAIN);
+					lv_obj_add_style(chart_beta, &style_bg, LV_PART_MAIN);
 					lv_chart_set_div_line_count(chart_beta, 0, 0);
 					lv_obj_align(chart_beta, LV_ALIGN_TOP_RIGHT, 0, -5);
 					lv_obj_set_style_border_width(chart_beta, 1, LV_PART_MAIN);
@@ -686,7 +868,8 @@ void redraw_widgets(widget_options* opts){
 
 					chart_beta = lv_chart_create(obj2);
 					lv_obj_set_size(chart_beta, 140, 53);
-					lv_obj_set_style_bg_color(chart_beta, lv_color_black(), LV_PART_MAIN);
+					//lv_obj_set_style_bg_color(chaffrt_beta, lv_color_black(), LV_PART_MAIN);
+					lv_obj_add_style(chart_beta, &style_bg, LV_PART_MAIN);
 					lv_chart_set_div_line_count(chart_beta, 0, 0);
 					lv_obj_align(chart_beta, LV_ALIGN_RIGHT_MID, 0, 0);
 					lv_obj_set_style_border_width(chart_beta, 1, LV_PART_MAIN);
@@ -722,7 +905,8 @@ void redraw_widgets(widget_options* opts){
 
 				chart_beta = lv_chart_create(obj2);
 				lv_obj_set_size(chart_beta, 140, 40);
-				lv_obj_set_style_bg_color(chart_beta, lv_color_black(), LV_PART_MAIN);
+				//lv_obj_set_style_bg_color(chffart_beta, lv_color_black(), LV_PART_MAIN);
+				lv_obj_add_style(chart_beta, &style_bg, LV_PART_MAIN);
 				lv_chart_set_div_line_count(chart_beta, 0, 0);
 				lv_obj_align(chart_beta, LV_ALIGN_RIGHT_MID, 0, lv_pct(-14));
 				lv_obj_set_style_border_width(chart_beta, 1, LV_PART_MAIN);
@@ -784,7 +968,8 @@ void redraw_widgets(widget_options* opts){
 							//Create a chart
 			chart_gamma = lv_chart_create(obj2);
 			lv_obj_set_size(chart_gamma, 300, 75);
-			lv_obj_set_style_bg_color(chart_gamma, lv_color_black(), LV_PART_MAIN);
+			//lv_obj_set_style_bg_color(chartff_gamma, lv_color_black(), LV_PART_MAIN);
+			lv_obj_add_style(chart_gamma, &style_bg, LV_PART_MAIN);
 			lv_chart_set_div_line_count(chart_gamma, 0, 0);
 			lv_obj_align(chart_gamma, LV_ALIGN_BOTTOM_MID, 0, 0);
 			lv_obj_set_style_border_width(chart_gamma, 1, LV_PART_MAIN);
@@ -814,7 +999,8 @@ void redraw_widgets(widget_options* opts){
 
 					chart_gamma = lv_chart_create(obj2);
 					lv_obj_set_size(chart_gamma, 140, 70);
-					lv_obj_set_style_bg_color(chart_gamma, lv_color_black(), LV_PART_MAIN);
+					//lv_obj_set_style_bg_color(charfft_gamma, lv_color_black(), LV_PART_MAIN);
+					lv_obj_add_style(chart_gamma, &style_bg, LV_PART_MAIN);
 					lv_chart_set_div_line_count(chart_gamma, 0, 0);
 					lv_obj_align(chart_gamma, LV_ALIGN_TOP_RIGHT, 0, 0);
 					lv_obj_set_style_border_width(chart_gamma, 1, LV_PART_MAIN);
@@ -849,7 +1035,8 @@ void redraw_widgets(widget_options* opts){
 
 					chart_gamma = lv_chart_create(obj2);
 					lv_obj_set_size(chart_gamma, 140, 70);
-					lv_obj_set_style_bg_color(chart_gamma, lv_color_black(), LV_PART_MAIN);
+					//lv_obj_set_style_bg_color(chaffrt_gamma, lv_color_black(), LV_PART_MAIN);
+					lv_obj_add_style(chart_gamma, &style_bg, LV_PART_MAIN);
 					lv_chart_set_div_line_count(chart_gamma, 0, 0);
 					lv_obj_align(chart_gamma, LV_ALIGN_BOTTOM_RIGHT, 0, 0);
 					lv_obj_set_style_border_width(chart_gamma, 1, LV_PART_MAIN);
@@ -898,7 +1085,8 @@ void redraw_widgets(widget_options* opts){
 
 					chart_gamma = lv_chart_create(obj2);
 					lv_obj_set_size(chart_gamma, 140, 53);
-					lv_obj_set_style_bg_color(chart_gamma, lv_color_black(), LV_PART_MAIN);
+					//lv_obj_set_style_bg_color(chaffrt_gamma, lv_color_black(), LV_PART_MAIN);
+					lv_obj_add_style(chart_gamma, &style_bg, LV_PART_MAIN);
 					lv_chart_set_div_line_count(chart_gamma, 0, 0);
 					lv_obj_align(chart_gamma, LV_ALIGN_RIGHT_MID, 0, 0);
 					lv_obj_set_style_border_width(chart_gamma, 1, LV_PART_MAIN);
@@ -932,7 +1120,8 @@ void redraw_widgets(widget_options* opts){
 
 					chart_gamma = lv_chart_create(obj2);
 					lv_obj_set_size(chart_gamma, 140, 53);
-					lv_obj_set_style_bg_color(chart_gamma, lv_color_black(), LV_PART_MAIN);
+					//lv_obj_set_style_bg_color(charfft_gamma, lv_color_black(), LV_PART_MAIN);
+					lv_obj_add_style(chart_gamma, &style_bg, LV_PART_MAIN);
 					lv_chart_set_div_line_count(chart_gamma, 0, 0);
 					lv_obj_align(chart_gamma, LV_ALIGN_RIGHT_MID, 0, lv_pct(35));
 					lv_obj_set_style_border_width(chart_gamma, 1, LV_PART_MAIN);
@@ -967,7 +1156,8 @@ void redraw_widgets(widget_options* opts){
 
 				chart_gamma = lv_chart_create(obj2);
 				lv_obj_set_size(chart_gamma, 140, 40);
-				lv_obj_set_style_bg_color(chart_gamma, lv_color_black(), LV_PART_MAIN);
+				//lv_obj_set_style_bg_color(chaffrt_gamma, lv_color_black(), LV_PART_MAIN);
+				lv_obj_add_style(chart_gamma, &style_bg, LV_PART_MAIN);
 				lv_chart_set_div_line_count(chart_gamma, 0, 0);
 				lv_obj_align(chart_gamma, LV_ALIGN_RIGHT_MID, 0, lv_pct(14));
 				lv_obj_set_style_border_width(chart_gamma, 1, LV_PART_MAIN);
@@ -1030,7 +1220,8 @@ void redraw_widgets(widget_options* opts){
 				//Create a chart
 			    chart_neutron = lv_chart_create(obj2);
 			    lv_obj_set_size(chart_neutron, 300, 75);
-			    lv_obj_set_style_bg_color(chart_neutron, lv_color_black(), LV_PART_MAIN);
+			    //lv_obj_set_style_bg_color(chaffrt_neutron, lv_color_black(), LV_PART_MAIN);
+			    lv_obj_add_style(chart_neutron, &style_bg, LV_PART_MAIN);
 			    lv_chart_set_div_line_count(chart_neutron, 0, 0);
 			    lv_obj_align(chart_neutron, LV_ALIGN_BOTTOM_MID, 0, 0);
 			    lv_obj_set_style_border_width(chart_neutron, 1, LV_PART_MAIN);
@@ -1062,7 +1253,8 @@ void redraw_widgets(widget_options* opts){
 
 					chart_neutron = lv_chart_create(obj2);
 					lv_obj_set_size(chart_neutron, 140, 70);
-					lv_obj_set_style_bg_color(chart_neutron, lv_color_black(), LV_PART_MAIN);
+					//lv_obj_set_style_bg_color(charfft_neutron, lv_color_black(), LV_PART_MAIN);
+					lv_obj_add_style(chart_neutron, &style_bg, LV_PART_MAIN);
 					lv_chart_set_div_line_count(chart_neutron, 0, 0);
 					lv_obj_align(chart_neutron, LV_ALIGN_TOP_RIGHT, 0, 0);
 					lv_obj_set_style_border_width(chart_neutron, 1, LV_PART_MAIN);
@@ -1098,7 +1290,8 @@ void redraw_widgets(widget_options* opts){
 
 					chart_neutron = lv_chart_create(obj2);
 					lv_obj_set_size(chart_neutron, 140, 70);
-					lv_obj_set_style_bg_color(chart_neutron, lv_color_black(), LV_PART_MAIN);
+					//lv_obj_set_style_bg_color(charfft_neutron, lv_color_black(), LV_PART_MAIN);
+					lv_obj_add_style(chart_neutron, &style_bg, LV_PART_MAIN);
 					lv_chart_set_div_line_count(chart_neutron, 0, 0);
 					lv_obj_align(chart_neutron, LV_ALIGN_BOTTOM_RIGHT, 0, 0);
 					lv_obj_set_style_border_width(chart_neutron, 1, LV_PART_MAIN);
@@ -1159,7 +1352,8 @@ void redraw_widgets(widget_options* opts){
 
 					chart_neutron = lv_chart_create(obj2);
 					lv_obj_set_size(chart_neutron, 140, 53);
-					lv_obj_set_style_bg_color(chart_neutron, lv_color_black(), LV_PART_MAIN);
+					//lv_obj_set_style_bg_color(charfft_neutron, lv_color_black(), LV_PART_MAIN);
+					lv_obj_add_style(chart_neutron, &style_bg, LV_PART_MAIN);
 					lv_chart_set_div_line_count(chart_neutron, 0, 0);
 					lv_obj_align(chart_neutron, LV_ALIGN_BOTTOM_RIGHT, 0, 5);
 					lv_obj_set_style_border_width(chart_neutron, 1, LV_PART_MAIN);
@@ -1198,7 +1392,8 @@ void redraw_widgets(widget_options* opts){
 
 				chart_neutron = lv_chart_create(obj2);
 				lv_obj_set_size(chart_neutron, 140, 40);
-				lv_obj_set_style_bg_color(chart_neutron, lv_color_black(), LV_PART_MAIN);
+				//lv_obj_set_style_bg_color(chaffrt_neutron, lv_color_black(), LV_PART_MAIN);
+				lv_obj_add_style(chart_neutron, &style_bg, LV_PART_MAIN);
 				lv_chart_set_div_line_count(chart_neutron, 0, 0);
 				lv_obj_align(chart_neutron, LV_ALIGN_BOTTOM_RIGHT, 0, 7);
 				lv_obj_set_style_border_width(chart_neutron, 1, LV_PART_MAIN);

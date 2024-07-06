@@ -120,9 +120,21 @@
 
 #define SENSOR_PIN					GPIO_NUM_18
 #define BUZZER_PIN					GPIO_NUM_12
-#define GPIO_UP						10
+#define GPIO_UP						0	//10
 #define GPIO_DOWN					3
 #define GPIO_ENTER					14
+
+#define EDIT_NONE					0
+#define EDIT_UNIT					1
+#define EDIT_THEME					2
+#define EDIT_LANG					3
+
+static void nvs_load(void);
+static void options_redraw(void);
+static void timer_init(void);
+void lvgl_setup();
+void ble_app_advertise(void);
+void connect_ble(void);
 
 typedef struct {
 	uint8_t alpha;
