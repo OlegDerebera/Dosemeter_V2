@@ -180,6 +180,7 @@ lv_obj_t* screenTab;
 lv_obj_t* tabview;
 //-----------------------------------------------
 uint8_t inMenu = 0;
+uint8_t inTabview = 0;
 uint8_t isSelected = 0;
 uint8_t numIncrement = 0;
 uint8_t edit_mode = 0;
@@ -497,7 +498,9 @@ static void IRAM_ATTR gpio_isr_inc(void* args)
 
 void encoder_with_keys_read(lv_indev_drv_t * drv, lv_indev_data_t* data){
 
-	(void) drv;
+	/*(void) drv;
+	static int32_t last_diff = 0;
+	int32_t diff = 0;
 
 	if(gpio_get_level(GPIO_ENTER) && gpio_get_level(GPIO_DOWN) && gpio_get_level(GPIO_UP))
 	{
@@ -506,8 +509,9 @@ void encoder_with_keys_read(lv_indev_drv_t * drv, lv_indev_data_t* data){
 
 		if(gpio_get_level(GPIO_DOWN) == 0)
 		{
-
-			data->key = LV_KEY_DOWN;
+			diff++;
+			//data->key = LV_KEY_DOWN;
+			data->enc_diff = diff - last_diff;
 		}
 		if(gpio_get_level(GPIO_ENTER) == 0)
 		{
@@ -517,10 +521,43 @@ void encoder_with_keys_read(lv_indev_drv_t * drv, lv_indev_data_t* data){
 		}
 		if(gpio_get_level(GPIO_UP) == 0)
 		{
-			data->key = LV_KEY_UP;
+			diff--;
+			//data->key = LV_KEY_UP;
+			data->enc_diff = diff - last_diff;
 		}
 		data->state = LV_INDEV_STATE_PRESSED;
+	}*/
+	(void) drv;
+
+	static int32_t last_diff = 0;
+	int32_t diff = 0;
+
+	if(gpio_get_level(GPIO_DOWN) == 0)
+	{
+		diff++;
+		//data->key = LV_KEY_RIGHT;
+		data->enc_diff = diff - last_diff;
 	}
+	if(gpio_get_level(GPIO_ENTER) == 0)
+	{
+		data->key = LV_KEY_ENTER;
+		//data->state = LV_INDEV_STATE_PRESSED;
+	}
+	if(gpio_get_level(GPIO_UP) == 0)
+	{
+		diff--;
+		//data->key = LV_KEY_LEFT;
+		data->enc_diff = diff - last_diff;
+		//data->enc_diff--;
+	}
+
+	if(gpio_get_level(GPIO_ENTER))
+	{
+		data->state = LV_INDEV_STATE_RELEASED;
+	}else{
+		data->state = LV_INDEV_STATE_PRESSED;
+	}
+	last_diff = diff;
 }
 
 
@@ -555,12 +592,117 @@ void lv_table_set_selected_cell(lv_obj_t * obj, uint16_t  row, uint16_t  col)
 
 void tabview_cb(lv_event_t * e)
 {
-	lv_event_code_t code = lv_event_get_code(e);
+	static uint8_t isEnterPressed = 0;
+	static uint8_t isLongPressed = 0;
+    lv_event_code_t code = lv_event_get_code(e);
+    lv_obj_t * obj = lv_event_get_target(e);
 
-	if(code == LV_EVENT_PRESSED){
-		ESP_LOGI("tab", "cb");
-		lv_indev_set_group(my_indev, g_tab_btn);
-	}
+    if(code == LV_EVENT_PRESSED){
+    	ESP_LOGI("tab", "skibidi");
+    	isEnterPressed = 1;
+    }
+    if(code == LV_EVENT_LONG_PRESSED){
+    	ESP_LOGI("tab", "moron");
+    }
+    else if(code == LV_EVENT_LONG_PRESSED_REPEAT){
+    	ESP_LOGI("tab", "doiki");
+    	if(isEnterPressed)
+    		isLongPressed = 1;
+    	//lv_group_set_editing(g_tab, true);
+		//gpio_intr_disable(GPIO_ENTER);
+		//gpio_intr_disable(GPIO_UP);
+		//gpio_intr_disable(GPIO_DOWN);
+    }
+    else if(code == LV_EVENT_RELEASED){
+    	ESP_LOGI("tab", "ent %d hold %d", isEnterPressed, isLongPressed);
+    	if(isLongPressed && isEnterPressed){	// exit tabview
+    		ESP_LOGI("tab", "papa");
+    		lv_scr_load(screenMenu);
+
+
+
+    		lv_indev_set_group(my_indev, g_menu);
+    		isLongPressed = 0;
+			isEnterPressed = 0;
+
+    	}else if(isEnterPressed){
+			lv_indev_set_group(my_indev, g_tab_btn);
+			gpio_intr_disable(GPIO_ENTER);
+			gpio_intr_disable(GPIO_UP);
+			gpio_intr_disable(GPIO_DOWN);
+			isEnterPressed = 0;
+    	}
+    }
+   /* if (code == LV_EVENT_KEY) {
+        uint32_t key = lv_event_get_key(e);
+        uint16_t tab_act = lv_tabview_get_tab_act(obj);
+        uint16_t tab_cnt = 0;
+        ESP_LOGI("tab", "id: %d", tab_act);
+
+        if (key == LV_KEY_DOWN) {
+            if (tab_act < tab_cnt - 1) {
+                lv_tabview_set_act(obj, tab_act + 1, LV_ANIM_ON);
+            } else {
+                lv_tabview_set_act(obj, 0, LV_ANIM_ON); // Wrap around to the first tab
+            }
+        } else if (key == LV_KEY_UP) {
+            if (tab_act > 0) {
+                lv_tabview_set_act(obj, tab_act - 1, LV_ANIM_ON); // Wrap around to the last tab
+            } else {
+                lv_tabview_set_act(obj, tab_cnt - 1, LV_ANIM_ON);
+            }
+        }
+    }*/
+}
+
+void checkbox_cb(lv_event_t * e)
+{
+    lv_event_code_t code = lv_event_get_code(e);
+    lv_obj_t * obj = lv_event_get_target(e);
+    lv_indev_t* i = lv_event_get_indev(e);
+
+    static uint8_t isLongPressed = 0;
+    if(code == LV_EVENT_VALUE_CHANGED) {
+        const char * txt = lv_checkbox_get_text(obj);
+        const char * state = lv_obj_get_state(obj) & LV_STATE_CHECKED ? "Checked" : "Unchecked";
+        LV_LOG_USER("%s: %s", txt, state);
+    }
+    if(code == LV_EVENT_LONG_PRESSED){
+    	ESP_LOGI(TAG, "cb long pressed");
+
+    }
+
+    if(code == LV_EVENT_LONG_PRESSED_REPEAT)
+    {
+    	//lv_obj_del(target);
+    	isLongPressed = 1;
+    	ESP_LOGI(TAG, "cb press");
+    	//lv_indev_get_act();
+		i->proc.long_pr_sent = 0;
+		lv_obj_clear_state(obj, LV_STATE_PRESSED);
+    	lv_indev_set_group(my_indev, g_tab);
+
+		gpio_intr_enable(GPIO_UP);
+		gpio_intr_enable(GPIO_DOWN);
+		gpio_intr_enable(GPIO_ENTER);
+
+
+    }
+    if(code == LV_EVENT_RELEASED)
+    {
+    	if(isLongPressed){
+    		ESP_LOGI(TAG, "cb release");
+            //if(!(lv_obj_get_state(obj) & LV_STATE_CHECKED)) lv_obj_add_state(obj, LV_STATE_CHECKED);
+            //else lv_obj_clear_state(obj, LV_STATE_CHECKED);
+
+/*lv_indev_set_group(my_indev, g_tab);
+
+			gpio_intr_enable(GPIO_UP);
+			gpio_intr_enable(GPIO_DOWN);
+			gpio_intr_enable(GPIO_ENTER);*/
+			isLongPressed = 0;
+    	}
+    }
 }
 
 /*static*/ void table_event_cb(lv_event_t* e)
@@ -675,9 +817,16 @@ void tabview_cb(lv_event_t * e)
 				lv_scr_load(screenSettings);
 				lv_indev_set_group(my_indev, g_settings);
 				lv_group_set_editing(g_settings, true);
-			}else if(row == 4){
+
+			}else if(row == 4){		//tabview
 				lv_scr_load(screenTab);
 				lv_indev_set_group(my_indev, g_tab);
+				lv_group_set_editing(g_tab, true);
+				inTabview = 1;
+				edit_mode = EDIT_TAB;
+				gpio_intr_enable(GPIO_UP);
+				gpio_intr_enable(GPIO_DOWN);
+				gpio_intr_enable(GPIO_ENTER);
 				lv_group_set_editing(g_tab, true);
 			}
 			ESP_LOGI(TAG, "pussy menu");
@@ -1283,7 +1432,7 @@ void task_gpio(void* args) // 0
 				{
 					if(isSelected){
 						//vTaskDelay(100 / portTICK_PERIOD_MS);
-						//ESP_LOGI(TAG, "selected");
+						ESP_LOGI(TAG, "selected");
 						//gpio_intr_disable(38);
 						if(edit_mode == EDIT_UNIT){
 							lv_table_set_selected_cell(table,
@@ -1357,10 +1506,18 @@ void task_gpio(void* args) // 0
 						gpio_intr_disable(GPIO_DOWN);
 
 					}else{	//no selected
-						vTaskDelay(100 / portTICK_PERIOD_MS);
+						vTaskDelay(300 / portTICK_PERIOD_MS);
 						ESP_LOGI(TAG, "intr pin %d", pin);
 						//lv_table_set_selected_cell(table, (uint16_t*)0, (uint16_t*)1);
-						//lv_indev_set_group(my_indev, g_empty);
+						if(edit_mode == EDIT_TAB){
+							ESP_LOGI(TAG, "tab enter");
+							/*lv_indev_set_group(my_indev, g_tab_btn);
+							gpio_intr_disable(GPIO_ENTER);
+							gpio_intr_disable(GPIO_UP);
+							gpio_intr_disable(GPIO_DOWN);*/
+							vTaskDelay(300 / portTICK_PERIOD_MS);
+						}
+
 						//isSelected = 1;
 					}
 
@@ -1390,6 +1547,11 @@ void task_gpio(void* args) // 0
 						}
 						ESP_LOGI(TAG, "Row: %d, Col: %d", row, col);
 						lv_table_set_cell_value(table_settings, row, col, theme_arr[theme_num]);
+					}else if(edit_mode == EDIT_TAB){
+
+						uint8_t tab_cur = lv_tabview_get_tab_act(tabview);
+
+						lv_tabview_set_act(tabview, (tab_cur - 1), LV_ANIM_OFF);
 					}
 					//lv_indev_set_group(my_indev, g_menu);
 					is38disabled = 0;
@@ -1413,6 +1575,14 @@ void task_gpio(void* args) // 0
 						}
 						ESP_LOGI(TAG, "Row: %d, Col: %d", row, col);
 						lv_table_set_cell_value(table_settings, row, col, theme_arr[theme_num]);
+					}else if(edit_mode == EDIT_TAB){
+						uint8_t tab_cur = lv_tabview_get_tab_act(tabview);
+						ESP_LOGI(TAG, "cur: %d", tab_cur);
+						if(tab_cur == 4){
+							lv_tabview_set_act(tabview, 0, LV_ANIM_OFF);
+						}else{
+							lv_tabview_set_act(tabview, (tab_cur + 1), LV_ANIM_OFF);
+						}
 					}
 					//lv_indev_set_group(my_indev, g_menu);
 					is38disabled = 0;

@@ -128,6 +128,7 @@
 #define EDIT_UNIT					1
 #define EDIT_THEME					2
 #define EDIT_LANG					3
+#define EDIT_TAB					4
 
 static void nvs_load(void);
 static void options_redraw(void);

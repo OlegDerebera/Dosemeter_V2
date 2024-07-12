@@ -8,7 +8,8 @@
  *********************/
 #include "lv_obj.h"
 #include "lv_indev.h"
-
+#include "stdbool.h"
+#include "stdio.h"
 /*********************
  *      DEFINES
  *********************/

@@ -2,7 +2,11 @@
  * @file lv_indev.c
  *
  */
-
+/*
+ * edited
+ * 630
+ * 694
+ * */
 /*********************
  *      INCLUDES
  ********************/
@@ -17,6 +21,8 @@
 #include "../misc/lv_timer.h"
 #include "../misc/lv_math.h"
 
+#include "stdbool.h"
+#include "stdio.h"
 /*********************
  *      DEFINES
  *********************/
@@ -629,13 +635,13 @@ static void indev_encoder_proc(lv_indev_t * i, lv_indev_data_t * data)
                     /*Don't leave edit mode if there is only one object (nowhere to navigate)*/
                     if(lv_group_get_obj_count(g) > 1) {
                         LV_LOG_INFO("toggling edit mode");
-                        lv_group_set_editing(g, lv_group_get_editing(g) ? false : true); /*Toggle edit mode on long press*/
-                        lv_obj_clear_state(indev_obj_act, LV_STATE_PRESSED);    /*Remove the pressed state manually*/
+                        //lv_group_set_editing(g, lv_group_get_editing(g) ? false : true); /*Toggle edit mode on long press*/
+                        //lv_obj_clear_state(indev_obj_act, LV_STATE_PRESSED);    /*Remove the pressed state manually*/
                     }
                 }
                 /*If not editable then just send a long press Call the ancestor's event handler*/
                 else {
-                    lv_event_send(indev_obj_act, LV_EVENT_LONG_PRESSED, indev_act);
+                    //lv_event_send(indev_obj_act, LV_EVENT_LONG_PRESSED, indev_act);
                     if(indev_reset_check(&i->proc)) return;
                 }
             }
@@ -705,6 +711,8 @@ static void indev_encoder_proc(lv_indev_t * i, lv_indev_data_t * data)
                 }
                 else {
                     lv_obj_clear_state(indev_obj_act, LV_STATE_PRESSED);    /*Remove the pressed state manually*/
+
+                    lv_event_send(indev_obj_act, LV_EVENT_RELEASED, indev_act);//custom
                 }
             }
             /*If the focused object is editable and now in navigate mode then on enter switch edit

@@ -26,6 +26,9 @@
 #include <stdint.h>
 #include <string.h>
 
+#include "stdbool.h"
+#include "stdio.h"
+
 #if LV_USE_GPU_STM32_DMA2D
     #include "../draw/stm32_dma2d/lv_gpu_stm32_dma2d.h"
 #endif
@@ -723,14 +726,17 @@ static void lv_obj_event(const lv_obj_class_t * class_p, lv_event_t * e)
 
     lv_event_code_t code = lv_event_get_code(e);
     lv_obj_t * obj = lv_event_get_current_target(e);
+
     if(code == LV_EVENT_PRESSED) {
         lv_obj_add_state(obj, LV_STATE_PRESSED);
     }
     else if(code == LV_EVENT_RELEASED) {
         lv_obj_clear_state(obj, LV_STATE_PRESSED);
         lv_indev_t * indev = lv_event_get_indev(e);
+        //char key = lv_indev_get_key(indev);//
         /*Go the checked state if enabled*/
-        if(lv_indev_get_scroll_obj(indev) == NULL && lv_obj_has_flag(obj, LV_OBJ_FLAG_CHECKABLE)) {
+        if(lv_indev_get_scroll_obj(indev) == NULL && lv_obj_has_flag(obj, LV_OBJ_FLAG_CHECKABLE)
+        ){//&& key == LV_KEY_ENTER) {
             if(!(lv_obj_get_state(obj) & LV_STATE_CHECKED)) lv_obj_add_state(obj, LV_STATE_CHECKED);
             else lv_obj_clear_state(obj, LV_STATE_CHECKED);
 
@@ -756,10 +762,16 @@ static void lv_obj_event(const lv_obj_class_t * class_p, lv_event_t * e)
             }
             else if(c == LV_KEY_LEFT || c == LV_KEY_DOWN) {
                 lv_obj_clear_state(obj, LV_STATE_CHECKED);
+            }else if(c == LV_KEY_ENTER){//
+                if(!(lv_obj_get_state(obj) & LV_STATE_CHECKED)) lv_obj_add_state(obj, LV_STATE_CHECKED);
+                else lv_obj_clear_state(obj, LV_STATE_CHECKED);
+
+                lv_res_t res = lv_event_send(obj, LV_EVENT_VALUE_CHANGED, NULL);
+                if(res != LV_RES_OK) return;
             }
 
             /*With Enter LV_EVENT_RELEASED will send VALUE_CHANGE event*/
-            if(c != LV_KEY_ENTER) {
+            if(c != LV_KEY_ENTER) {//  && c != LV_KEY_LEFT && c != LV_KEY_RIGHT
                 lv_res_t res = lv_event_send(obj, LV_EVENT_VALUE_CHANGED, NULL);
                 if(res != LV_RES_OK) return;
             }
@@ -772,10 +784,20 @@ static void lv_obj_event(const lv_obj_class_t * class_p, lv_event_t * e)
             char c = *((char *)lv_event_get_param(e));
             if(c == LV_KEY_DOWN) {
                 /*use scroll_to_x/y functions to enforce scroll limits*/
-                lv_obj_scroll_to_y(obj, lv_obj_get_scroll_y(obj) + lv_obj_get_height(obj) / 4, anim_enable);
+                //lv_obj_scroll_to_y(obj, lv_obj_get_scroll_y(obj) + lv_obj_get_height(obj) / 4, anim_enable);
+                if(!((lv_obj_get_scroll_dir(obj) & LV_DIR_HOR) && (sl > 0 || sr > 0)))
+                    lv_obj_scroll_to_y(obj, lv_obj_get_scroll_y(obj) + lv_obj_get_height(obj) / 4, anim_enable);
+                else
+                    lv_obj_scroll_to_x(obj, lv_obj_get_scroll_x(obj) + lv_obj_get_width(obj) / 4, anim_enable);
+
             }
             else if(c == LV_KEY_UP) {
-                lv_obj_scroll_to_y(obj, lv_obj_get_scroll_y(obj) - lv_obj_get_height(obj) / 4, anim_enable);
+                //lv_obj_scroll_to_y(obj, lv_obj_get_scroll_y(obj) - lv_obj_get_height(obj) / 4, anim_enable);
+                if(!((lv_obj_get_scroll_dir(obj) & LV_DIR_HOR) && (sl > 0 || sr > 0)))
+                    lv_obj_scroll_to_y(obj, lv_obj_get_scroll_y(obj) - lv_obj_get_height(obj) / 4, anim_enable);
+                else
+                    lv_obj_scroll_to_x(obj, lv_obj_get_scroll_x(obj) - lv_obj_get_width(obj) / 4, anim_enable);
+
             }
             else if(c == LV_KEY_RIGHT) {
                 /*If the object can't be scrolled horizontally then scroll it vertically*/
@@ -792,7 +814,7 @@ static void lv_obj_event(const lv_obj_class_t * class_p, lv_event_t * e)
                     lv_obj_scroll_to_x(obj, lv_obj_get_scroll_x(obj) - lv_obj_get_width(obj) / 4, anim_enable);
             }
         }
-    }
+    }	//event key
     else if(code == LV_EVENT_FOCUSED) {
         if(lv_obj_has_flag(obj, LV_OBJ_FLAG_SCROLL_ON_FOCUS)) {
             lv_obj_scroll_to_view_recursive(obj, LV_ANIM_ON);

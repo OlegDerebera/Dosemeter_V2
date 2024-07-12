@@ -13,6 +13,9 @@
 #include "../core/lv_obj.h"
 #include "../core/lv_indev.h"
 
+#include "stdbool.h"
+#include "stdio.h"
+
 /*********************
  *      DEFINES
  *********************/
