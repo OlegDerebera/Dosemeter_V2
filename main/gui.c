@@ -17,9 +17,11 @@ extern void table_settings_event_cb(lv_event_t* e);
 extern void table_coef_event_cb(lv_event_t* e);
 extern void tabview_cb(lv_event_t * e);
 extern void checkbox_cb(lv_event_t * e);
+extern void table_tab_cb(lv_event_t* e);
 
 extern const char *TAG;
 
+extern lv_indev_t * my_indev;
 extern lv_group_t * g_menu;
 extern lv_group_t* g_empty;
 extern lv_group_t *g_widgets;
@@ -27,12 +29,16 @@ extern lv_group_t* g_settings;
 extern lv_group_t* g_coef;
 extern lv_group_t* g_tab;
 extern lv_group_t* g_tab_btn;
+extern lv_group_t* g_table_menu;
+extern lv_group_t* g_table_tab1;
+extern lv_group_t* g_table_tab2;
 extern lv_obj_t * scr1;
 lv_obj_t * obj2;
 static lv_style_t style2;
 static lv_style_t style_bg;
 static lv_style_t style_greek;
 static lv_style_t style_unit;
+static lv_style_t style_txt;
 extern char str_adc[10];
 extern lv_obj_t * label_adc;
 lv_obj_t * label_greek_alpha;
@@ -60,11 +66,15 @@ extern lv_obj_t* table;
 extern lv_obj_t* table_widgets;
 extern lv_obj_t* table_settings;
 extern lv_obj_t* table_coef;
+extern lv_obj_t* table_menu;
 extern lv_obj_t* screenMenu;
 extern lv_obj_t* screenWidgets;
 extern lv_obj_t* screenSettings;
 extern lv_obj_t* screenCoef;
 extern lv_obj_t* screenTab;
+extern lv_obj_t* screenTablemenu;
+extern lv_obj_t* screenTab1;
+extern lv_obj_t* screenTab2;
 extern lv_obj_t* tabview;
 //-----------------------------
 char* str[7];
@@ -124,7 +134,14 @@ static void change_event_cb(lv_event_t * e)
     else lv_table_add_cell_ctrl(obj, row, 0, LV_TABLE_CELL_CTRL_CUSTOM_1);
 }
 
+static void btn_back_cb(lv_event_t * e)
+{
+    lv_obj_t * obj = lv_event_get_target(e);
+    uint16_t col;
+    uint16_t row;
 
+    lv_indev_set_group(my_indev, g_table_menu);
+}
 
 void my_demo2(lv_disp_t *disp)
 {
@@ -171,6 +188,10 @@ void my_demo2(lv_disp_t *disp)
 	LV_FONT_DECLARE(greek);
 	LV_FONT_DECLARE(lv_font_montserrat_16);
 	LV_FONT_DECLARE(lv_font_montserrat_48);
+
+	lv_style_init(&style_txt);
+    lv_style_set_text_font(&style_txt, &lv_font_montserrat_16);
+    lv_style_set_text_color(&style_txt, lv_color_white());
 
     lv_style_init(&style2);
     lv_style_set_text_font(&style2, &montserrat_48);  /*Set a larger font*/
@@ -245,19 +266,19 @@ void my_demo2(lv_disp_t *disp)
 	table = lv_table_create(screenMenu);
 	lv_obj_clear_flag(table, LV_OBJ_FLAG_SCROLLABLE);
 	//lv_obj_add_state(table, LV_STATE_EDITED);
-	lv_table_set_cell_value(table, 0, 0, "Start");
+	lv_table_set_cell_value(table, 0, 0, "Widget");
 	//lv_table_set_cell_value(table, 0, 1, unit_arr[unit_num]);
-    lv_table_set_cell_value(table, 1, 0, "Coeff");
+    lv_table_set_cell_value(table, 1, 0, "Settings");	//coef
     lv_table_add_cell_ctrl(table, 1, 0, LV_TABLE_CELL_CTRL_MERGE_RIGHT);
     //lv_table_set_cell_value(table, 1, 1, "Finish");
 
-    lv_table_set_cell_value(table, 2, 0, "Widgets");
+    lv_table_set_cell_value(table, 2, 0, "jurnal");	//widget
     //lv_table_add_cell_ctrl(table, 2, 0, LV_TABLE_CELL_CTRL_MERGE_RIGHT);
 
-    lv_table_set_cell_value(table, 3, 0, "Settings");
+    lv_table_set_cell_value(table, 3, 0, "spektr");	//sett
     //lv_table_add_cell_ctrl(table, 3, 0, LV_TABLE_CELL_CTRL_MERGE_RIGHT);
 
-    lv_table_set_cell_value(table, 4, 0, "Tabview");
+    lv_table_set_cell_value(table, 4, 0, "About");	//tabview
     //lv_table_add_cell_ctrl(table, 4, 0, LV_TABLE_CELL_CTRL_MERGE_RIGHT);
 
     //lv_obj_add_style(table, &style_bg, LV_PART_MAIN | LV_PART_ITEMS);
@@ -411,16 +432,27 @@ void my_demo2(lv_disp_t *disp)
     //lv_obj_set_style_bg_color(tabview, lv_palette_lighten(LV_PALETTE_RED, 2), 0);
 
     lv_obj_t * tab_btns = lv_tabview_get_tab_btns(tabview);
+
+    //lv_obj_set_size(tab_btns, 80, 220);
+    /*lv_obj_t *tab_btns_page = lv_page_create(lv_scr_act());
+    lv_obj_set_size(tab_btns_page, lv_obj_get_width(tab_btns), lv_obj_get_height(tab_btns));
+    lv_obj_set_parent(tab_btns, tab_btns_page);
+    lv_obj_set_parent(tab_btns_page, lv_scr_act());  // Adjust the hierarchy as needed
+    */
+    lv_obj_set_flex_flow(tab_btns, LV_FLEX_FLOW_COLUMN);
+    lv_obj_set_scrollbar_mode(tab_btns, LV_SCROLLBAR_MODE_AUTO);
+
     lv_obj_set_style_bg_color(tab_btns, lv_palette_darken(LV_PALETTE_GREY, 3), 0);
     lv_obj_set_style_text_color(tab_btns, lv_palette_lighten(LV_PALETTE_GREY, 5), 0);
     lv_obj_set_style_border_side(tab_btns, LV_BORDER_SIDE_RIGHT, LV_PART_ITEMS | LV_STATE_CHECKED);
 
     /*Add 3 tabs (the tabs are page (lv_page) and can be scrolled*/
     lv_obj_t * tab1 = lv_tabview_add_tab(tabview, "Tab 1");
-    lv_obj_t * tab2 = lv_tabview_add_tab(tabview, "Tab 2");
-    lv_obj_t * tab3 = lv_tabview_add_tab(tabview, "Tab 3");
-    lv_obj_t * tab4 = lv_tabview_add_tab(tabview, "Tab 4");
-    lv_obj_t * tab5 = lv_tabview_add_tab(tabview, "Tab 5");
+    lv_obj_t * tab2 = lv_tabview_add_tab(tabview, "tryvog");
+    lv_obj_t * tab3 = lv_tabview_add_tab(tabview, "Lang");
+    lv_obj_t * tab4 = lv_tabview_add_tab(tabview, "Disp");
+    lv_obj_t * tab5 = lv_tabview_add_tab(tabview, "Signal");
+    lv_obj_t * tab6 = lv_tabview_add_tab(tabview, "lol");
 
     lv_obj_set_style_bg_color(tab2, lv_palette_lighten(LV_PALETTE_AMBER, 3), 0);
     lv_obj_set_style_bg_opa(tab2, LV_OPA_COVER, 0);
@@ -442,6 +474,9 @@ void my_demo2(lv_disp_t *disp)
 
     label = lv_label_create(tab5);
     lv_label_set_text(label, "Fifth tab");
+
+    label = lv_label_create(tab6);
+    lv_label_set_text(label, "Sixth tab");
 
     lv_obj_add_event_cb(tabview, tabview_cb, LV_EVENT_ALL, 0);
 
@@ -478,6 +513,7 @@ void my_demo2(lv_disp_t *disp)
 
     cb = lv_checkbox_create(tab1);
     lv_checkbox_set_text(cb, "Banana");
+    lv_obj_add_style(cb, &style_txt, LV_PART_MAIN);
     lv_obj_set_pos(cb, 10, 30);
     lv_obj_add_state(cb, LV_STATE_CHECKED);
     lv_obj_add_event_cb(cb, checkbox_cb, LV_EVENT_ALL, NULL);
@@ -485,6 +521,7 @@ void my_demo2(lv_disp_t *disp)
 
     cb = lv_checkbox_create(tab1);
     lv_checkbox_set_text(cb, "kiwi");
+    lv_obj_add_style(cb, &style_txt, LV_PART_MAIN);
     lv_obj_set_pos(cb, 10, 60);
     lv_obj_add_state(cb, LV_STATE_CHECKED);
     lv_obj_add_event_cb(cb, checkbox_cb, LV_EVENT_ALL, NULL);
@@ -492,6 +529,7 @@ void my_demo2(lv_disp_t *disp)
 
     cb = lv_checkbox_create(tab1);
     lv_checkbox_set_text(cb, "potato");
+    lv_obj_add_style(cb, &style_txt, LV_PART_MAIN);
     lv_obj_set_pos(cb, 10, 90);
     lv_obj_add_state(cb, LV_STATE_CHECKED);
     lv_obj_add_event_cb(cb, checkbox_cb, LV_EVENT_ALL, NULL);
@@ -499,6 +537,7 @@ void my_demo2(lv_disp_t *disp)
 
     cb = lv_checkbox_create(tab1);
     lv_checkbox_set_text(cb, "Lemon");
+    lv_obj_add_style(cb, &style_txt, LV_PART_MAIN);
     lv_obj_set_pos(cb, 10, 120);
     //lv_obj_add_state(cb, LV_STATE_DISABLED);
     lv_obj_add_event_cb(cb, checkbox_cb, LV_EVENT_PRESSED, NULL);
@@ -507,16 +546,145 @@ void my_demo2(lv_disp_t *disp)
     cb = lv_checkbox_create(tab1);
     //lv_obj_add_state(cb, LV_STATE_CHECKED | LV_STATE_DISABLED);
     lv_checkbox_set_text(cb, "Melon");
+    lv_obj_add_style(cb, &style_txt, LV_PART_MAIN);
     lv_obj_set_pos(cb, 10, 150);
     lv_obj_add_event_cb(cb, checkbox_cb, LV_EVENT_ALL, NULL);
     lv_group_add_obj(g_tab_btn, cb);
 
     cb = lv_checkbox_create(tab1);
     lv_checkbox_set_text(cb, "Grape");
+    lv_obj_add_style(cb, &style_txt, LV_PART_MAIN);
     lv_obj_set_pos(cb, 10, 200);
     lv_obj_add_event_cb(cb, checkbox_cb, LV_EVENT_ALL, NULL);
     lv_group_add_obj(g_tab_btn, cb);
+
+
+    //table for like tabview or something
+    lv_group_set_default(g_table_menu);
+    screenTablemenu = lv_obj_create(NULL);
+    lv_obj_set_size(screenTablemenu, lv_pct(103), lv_pct(103));
+
+    lv_obj_align(screenTablemenu, LV_ALIGN_CENTER, 0, 0);
+    lv_obj_set_scrollbar_mode(screenTablemenu, LV_SCROLLBAR_MODE_OFF);
+    lv_obj_set_style_bg_color(screenTablemenu, lv_color_black(), LV_PART_MAIN);
+    //lv_obj_add_style(screenMenu, &style_bg, LV_PART_MAIN);
+
+	table_menu = lv_table_create(screenTablemenu);
+	lv_obj_clear_flag(table_menu, LV_OBJ_FLAG_SCROLLABLE);
+
+	lv_table_set_cell_value(table_menu, 0, 0, "Pidor");
+
+    lv_table_set_cell_value(table_menu, 1, 0, "Pizda");	//coef
+
+    lv_table_set_cell_value(table_menu, 2, 0, "Xyi");	//widget
+
+    lv_table_set_cell_value(table_menu, 3, 0, "Malafia");	//sett
+
+    lv_table_set_cell_value(table_menu, 4, 0, "About");	//tabview
+
+    lv_obj_set_size(table_menu, 80, lv_pct(103));
+    lv_table_set_col_width(table_menu, 0, 80);
+    lv_obj_set_align(table_menu, LV_ALIGN_LEFT_MID);
+
+
+
+    lv_obj_add_style(table_menu, &style_bg, LV_PART_ITEMS);
+    lv_obj_add_style(table_menu, &style_bg, LV_PART_MAIN);
+    lv_obj_set_style_border_width(table_menu, 0, LV_PART_ITEMS);
+    lv_obj_set_style_border_width(table_menu, 0, LV_PART_MAIN);
+    lv_obj_set_style_text_font(table_menu, &lv_font_montserrat_16, LV_PART_ITEMS);
+
+    lv_obj_add_event_cb(table_menu, draw_event_cb, LV_EVENT_DRAW_PART_END, NULL);
+    lv_obj_add_event_cb(table_menu, table_tab_cb, LV_EVENT_ALL, NULL);
+
+    //lv_group_set_default(g_table_tab1);
+    screenTab1 = lv_obj_create(screenTablemenu);
+    lv_obj_set_size(screenTab1, lv_pct(103), lv_pct(103));
+
+    lv_obj_align(screenTab1, LV_ALIGN_RIGHT_MID, 0, 0);
+    lv_obj_set_scrollbar_mode(screenTab1, LV_SCROLLBAR_MODE_OFF);
+    lv_obj_set_style_bg_color(screenTab1, lv_color_white(), LV_PART_MAIN);
+
+    lv_obj_t * label_pidor;
+    label_pidor = lv_label_create(screenTab1);
+    lv_label_set_text(label_pidor, "PIDOR");
+    lv_obj_center(label_pidor);
+
+    lv_group_set_default(g_table_tab1);
+    lv_obj_t* button_tab = lv_btn_create(screenTab1);
+    lv_group_add_obj(g_table_tab1, button_tab);
+    lv_obj_set_pos(button_tab, 200, 20);
+    lv_obj_add_event_cb(button_tab, btn_back_cb, LV_EVENT_PRESSED, NULL);
+
+
+    //lv_group_set_default(g_table_tab1);
+    screenTab2 = lv_obj_create(screenTablemenu);
+    lv_obj_set_size(screenTab2, lv_pct(103), lv_pct(103));
+
+    lv_obj_align(screenTab2, LV_ALIGN_RIGHT_MID, 0, 0);
+    lv_obj_set_scrollbar_mode(screenTab2, LV_SCROLLBAR_MODE_OFF);
+    lv_obj_set_style_bg_color(screenTab2, lv_palette_main(LV_PALETTE_AMBER), LV_PART_MAIN);
+    label_pidor = lv_label_create(screenTab2);
+    lv_label_set_text(label_pidor, "PIZda");
+    lv_obj_center(label_pidor);
+
+    lv_group_set_default(g_table_tab2);
+    lv_obj_t* button_tab2 = lv_btn_create(screenTab2);
+    lv_group_add_obj(g_table_tab2, button_tab2);
+    lv_obj_set_pos(button_tab2, 200, 50);
+    lv_obj_add_event_cb(button_tab2, btn_back_cb, LV_EVENT_PRESSED, NULL);
+
+
+
+    cb = lv_checkbox_create(screenTab2);
+    lv_checkbox_set_text(cb, "Banana");
+    lv_obj_add_style(cb, &style_txt, LV_PART_MAIN);
+    lv_obj_set_pos(cb, 100, 30);
+    lv_obj_add_state(cb, LV_STATE_CHECKED);
+    lv_obj_add_event_cb(cb, checkbox_cb, LV_EVENT_ALL, NULL);
+    lv_group_add_obj(g_table_tab2, cb);
+
+    cb = lv_checkbox_create(screenTab2);
+    lv_checkbox_set_text(cb, "kiwi");
+    lv_obj_add_style(cb, &style_txt, LV_PART_MAIN);
+    lv_obj_set_pos(cb, 100, 60);
+    lv_obj_add_state(cb, LV_STATE_CHECKED);
+    lv_obj_add_event_cb(cb, checkbox_cb, LV_EVENT_ALL, NULL);
+    lv_group_add_obj(g_table_tab2, cb);
+
+    cb = lv_checkbox_create(screenTab2);
+    lv_checkbox_set_text(cb, "potato");
+    lv_obj_add_style(cb, &style_txt, LV_PART_MAIN);
+    lv_obj_set_pos(cb, 100, 90);
+    lv_obj_add_state(cb, LV_STATE_CHECKED);
+    lv_obj_add_event_cb(cb, checkbox_cb, LV_EVENT_ALL, NULL);
+    lv_group_add_obj(g_table_tab2, cb);
+
+    cb = lv_checkbox_create(screenTab2);
+    lv_checkbox_set_text(cb, "Lemon");
+    lv_obj_add_style(cb, &style_txt, LV_PART_MAIN);
+    lv_obj_set_pos(cb, 100, 120);
+    //lv_obj_add_state(cb, LV_STATE_DISABLED);
+    lv_obj_add_event_cb(cb, checkbox_cb, LV_EVENT_PRESSED, NULL);
+    lv_group_add_obj(g_table_tab2, cb);
+
+    cb = lv_checkbox_create(screenTab2);
+    //lv_obj_add_state(cb, LV_STATE_CHECKED | LV_STATE_DISABLED);
+    lv_checkbox_set_text(cb, "Melon");
+    lv_obj_add_style(cb, &style_txt, LV_PART_MAIN);
+    lv_obj_set_pos(cb, 100, 150);
+    lv_obj_add_event_cb(cb, checkbox_cb, LV_EVENT_ALL, NULL);
+    lv_group_add_obj(g_table_tab2, cb);
+
+    cb = lv_checkbox_create(screenTab2);
+    lv_checkbox_set_text(cb, "Grape");
+    lv_obj_add_style(cb, &style_txt, LV_PART_MAIN);
+    lv_obj_set_pos(cb, 100, 200);
+    lv_obj_add_event_cb(cb, checkbox_cb, LV_EVENT_ALL, NULL);
+    lv_group_add_obj(g_table_tab2, cb);
+
     //lv_obj_add_event_cb(table_widgets, change_event_cb, LV_EVENT_VALUE_CHANGED, NULL);
+    lv_obj_move_foreground(table_menu);
     //vTaskDelay(3000 / portTICK_PERIOD_MS);
 	lv_scr_load_anim(scr1, LV_SCR_LOAD_ANIM_FADE_OUT, 500, 1000, true);
 	////lv_obj_set_style_bg_color(obj1, lv_color_white(), LV_PART_MAIN);

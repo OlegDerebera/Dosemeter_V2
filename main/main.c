@@ -142,6 +142,9 @@ lv_group_t* g_settings;
 lv_group_t* g_coef;
 lv_group_t* g_tab;
 lv_group_t* g_tab_btn;
+lv_group_t* g_table_menu;
+lv_group_t* g_table_tab1;
+lv_group_t* g_table_tab2;
 /*static*/ lv_obj_t * scr1;
 char str_adc[10];
 char str_alpha[10];
@@ -172,11 +175,15 @@ lv_obj_t* table_widgets;
 lv_obj_t* table_settings;
 lv_obj_t* table_coef;
 lv_obj_t* table_inc;
+lv_obj_t* table_menu;
 /*static*/ lv_obj_t* screenMenu;
 /*static*/ lv_obj_t* screenWidgets;
 lv_obj_t* screenSettings;
 lv_obj_t* screenCoef;
 lv_obj_t* screenTab;
+lv_obj_t* screenTablemenu;
+lv_obj_t* screenTab1;
+lv_obj_t* screenTab2;
 lv_obj_t* tabview;
 //-----------------------------------------------
 uint8_t inMenu = 0;
@@ -705,6 +712,87 @@ void checkbox_cb(lv_event_t * e)
     }
 }
 
+void table_tab_cb(lv_event_t* e)
+{
+	lv_obj_t* obj = lv_event_get_target(e);
+	static uint8_t isEnterPressed = 0;
+	static uint8_t isLongPressed = 0;
+    uint16_t col;
+    uint16_t row;
+    lv_table_get_selected_cell(obj, &row, &col);
+    navigation = row;
+    lv_event_code_t code = lv_event_get_code(e);
+
+
+    if(code == LV_EVENT_PRESSED){
+    	ESP_LOGI(TAG, "enter");
+    	isEnterPressed = 1;
+
+    }
+
+    if(code == LV_EVENT_LONG_PRESSED_REPEAT)
+    {
+    	//lv_obj_del(target);
+    	isLongPressed = 1;
+    	ESP_LOGI(TAG, "press");
+    }
+    if(code == LV_EVENT_RELEASED)
+    {
+		if(isLongPressed == 1 && isEnterPressed == 1)
+		{
+			ESP_LOGI(TAG, "Long press release");
+	    	lv_scr_load(scr1);
+	    	inMenu = 0;
+	    	//is38disabled = 1;
+	    	gpio_intr_enable(GPIO_ENTER);
+			//lv_obj_add_flag(table, LV_OBJ_FLAG_HIDDEN);
+	    	lv_indev_set_group(my_indev, g_empty);
+	    	isLongPressed = 0;
+	    	isEnterPressed = 0;
+	    	isExit = 1;
+	    	//xTaskNotifyGive(task_gpio_h);
+
+		}else if(isEnterPressed == 1)
+		{
+
+			ESP_LOGI(TAG, "Row: %d, Col: %d", row, col);
+
+			if(row == 0){		//coef
+
+			}else if(row == 1){		//start stop
+
+			}else if(row == 2){		//widgets
+				lv_indev_set_group(my_indev, g_table_tab1);
+			}else if(row == 3){		//settings
+				lv_indev_set_group(my_indev, g_table_tab2);
+
+			}else if(row == 4){		//tabview
+
+			}
+			ESP_LOGI(TAG, "pussy menu");
+			isEnterPressed = 0;
+		}else{ // enter no pressed
+			ESP_LOGI(TAG, "noPussy menu");
+		}
+    }else if(code == LV_EVENT_VALUE_CHANGED ){
+    	if(!isEnterPressed){
+    		ESP_LOGI(TAG, "tvoya mat shlyuha");
+    		ESP_LOGI(TAG, "Row: %d, Col: %d", row, col);
+    		if(row == 2){
+    			//lv_scr_load(screenTab1);
+    			lv_obj_move_to_index(screenTab1, 1);
+
+    			ESP_LOGI(TAG, "index table: %ld", lv_obj_get_index(table_menu));
+    			ESP_LOGI(TAG, "index 1: %ld", lv_obj_get_index(screenTab1));
+    			ESP_LOGI(TAG, "index 2: %ld", lv_obj_get_index(screenTab2));
+    		}else if(row == 3){
+    			lv_obj_move_to_index(screenTab2, 1);
+
+    		}
+    	}
+    }
+}
+
 /*static*/ void table_event_cb(lv_event_t* e)
 {
 	lv_obj_t* obj = lv_event_get_target(e);
@@ -780,7 +868,7 @@ void checkbox_cb(lv_event_t * e)
 				xTaskResumeFromISR(task_increment_h);
 
 			}else */
-			if(row == 1){		//coef
+			if(row == 7){		//coef
 				ESP_LOGI(TAG, "Table trans");
 
 				//isSelected = 1;
@@ -794,7 +882,7 @@ void checkbox_cb(lv_event_t * e)
 				//gpio_intr_disable(38);
 				gpio_intr_disable(GPIO_ENTER);
 
-			}else if(row == 0){		//start stop
+			}else if(row == 9){		//start stop
 
 				ESP_LOGI(TAG, "Table trans");
 
@@ -807,18 +895,18 @@ void checkbox_cb(lv_event_t * e)
 				//gpio_intr_disable(38);
 				gpio_intr_enable(GPIO_ENTER);
 
-			}else if(row == 2){		//widgets
+			}else if(row == 0){		//widgets
 				lv_scr_load(screenWidgets);
 				lv_indev_set_group(my_indev, g_widgets);
 				lv_group_set_editing(g_widgets, true);
 				//lv_group_focus_obj(table_widgets);
 				//lv_event_send(table_widgets, LV_EVENT_PRESSED, NULL);
-			}else if(row == 3){		//settings
+			}else if(row == 8){		//settings
 				lv_scr_load(screenSettings);
 				lv_indev_set_group(my_indev, g_settings);
 				lv_group_set_editing(g_settings, true);
 
-			}else if(row == 4){		//tabview
+			}else if(row == 1){		//tabview
 				lv_scr_load(screenTab);
 				lv_indev_set_group(my_indev, g_tab);
 				lv_group_set_editing(g_tab, true);
@@ -828,6 +916,10 @@ void checkbox_cb(lv_event_t * e)
 				gpio_intr_enable(GPIO_DOWN);
 				gpio_intr_enable(GPIO_ENTER);
 				lv_group_set_editing(g_tab, true);
+			}else if(row == 4){
+				lv_scr_load(screenTablemenu);
+				lv_indev_set_group(my_indev, g_table_menu);
+				lv_group_set_editing(g_table_menu, true);
 			}
 			ESP_LOGI(TAG, "pussy menu");
 			isEnterPressed = 0;
@@ -1578,7 +1670,7 @@ void task_gpio(void* args) // 0
 					}else if(edit_mode == EDIT_TAB){
 						uint8_t tab_cur = lv_tabview_get_tab_act(tabview);
 						ESP_LOGI(TAG, "cur: %d", tab_cur);
-						if(tab_cur == 4){
+						if(tab_cur == 5){
 							lv_tabview_set_act(tabview, 0, LV_ANIM_OFF);
 						}else{
 							lv_tabview_set_act(tabview, (tab_cur + 1), LV_ANIM_OFF);
@@ -1878,6 +1970,9 @@ void app_main(void)
 	    g_coef = lv_group_create();
 	    g_tab = lv_group_create();
 	    g_tab_btn = lv_group_create();
+	    g_table_menu = lv_group_create();
+	    g_table_tab1 = lv_group_create();
+	    g_table_tab2 = lv_group_create();
 	    lv_group_set_default(g);
 
 	    lv_indev_set_group(my_indev, g);
