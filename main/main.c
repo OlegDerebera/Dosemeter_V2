@@ -143,9 +143,15 @@ lv_group_t* g_coef;
 lv_group_t* g_tab;
 lv_group_t* g_tab_btn;
 lv_group_t* g_table_menu;
-lv_group_t* g_table_tab1;
-lv_group_t* g_table_tab2;
-/*static*/ lv_obj_t * scr1;
+lv_group_t* g_set_alarm;
+lv_group_t* g_set_signal;
+lv_group_t* g_set_sound;
+lv_group_t* g_set_disp;
+lv_group_t* g_set_ble;
+lv_group_t* g_set_clock;
+lv_group_t* g_set_lang;
+lv_group_t* g_set_reset;
+lv_obj_t * scr1;
 char str_adc[10];
 char str_alpha[10];
 char str_beta[10];
@@ -176,14 +182,22 @@ lv_obj_t* table_settings;
 lv_obj_t* table_coef;
 lv_obj_t* table_inc;
 lv_obj_t* table_menu;
-/*static*/ lv_obj_t* screenMenu;
-/*static*/ lv_obj_t* screenWidgets;
+lv_obj_t* screenMenu;
+lv_obj_t* screenWidgets;
 lv_obj_t* screenSettings;
 lv_obj_t* screenCoef;
 lv_obj_t* screenTab;
 lv_obj_t* screenTablemenu;
 lv_obj_t* screenTab1;
 lv_obj_t* screenTab2;
+lv_obj_t* scr_set_alarm;
+lv_obj_t* scr_set_signal;
+lv_obj_t* scr_set_sound;
+lv_obj_t* scr_set_disp;
+lv_obj_t* scr_set_ble;
+lv_obj_t* scr_set_clock;
+lv_obj_t* scr_set_lang;
+lv_obj_t* scr_set_reset;
 lv_obj_t* tabview;
 //-----------------------------------------------
 uint8_t inMenu = 0;
@@ -741,12 +755,9 @@ void table_tab_cb(lv_event_t* e)
 		if(isLongPressed == 1 && isEnterPressed == 1)
 		{
 			ESP_LOGI(TAG, "Long press release");
-	    	lv_scr_load(scr1);
+	    	lv_scr_load(screenMenu);
 	    	inMenu = 0;
-	    	//is38disabled = 1;
-	    	gpio_intr_enable(GPIO_ENTER);
-			//lv_obj_add_flag(table, LV_OBJ_FLAG_HIDDEN);
-	    	lv_indev_set_group(my_indev, g_empty);
+	    	lv_indev_set_group(my_indev, g_menu);
 	    	isLongPressed = 0;
 	    	isEnterPressed = 0;
 	    	isExit = 1;
@@ -757,17 +768,31 @@ void table_tab_cb(lv_event_t* e)
 
 			ESP_LOGI(TAG, "Row: %d, Col: %d", row, col);
 
-			if(row == 0){		//coef
-
-			}else if(row == 1){		//start stop
-
-			}else if(row == 2){		//widgets
-				lv_indev_set_group(my_indev, g_table_tab1);
-			}else if(row == 3){		//settings
-				lv_indev_set_group(my_indev, g_table_tab2);
-
-			}else if(row == 4){		//tabview
-
+			switch(row){
+    		case 0:
+    			lv_indev_set_group(my_indev, g_set_alarm);
+    			break;
+    		case 1:
+    			lv_indev_set_group(my_indev, g_set_signal);
+    			break;
+    		case 2:
+    			lv_indev_set_group(my_indev, g_set_sound);
+    			break;
+    		case 3:
+    			lv_indev_set_group(my_indev, g_set_disp);
+    			break;
+    		case 4:
+    			lv_indev_set_group(my_indev, g_set_ble);
+    			break;
+    		case 5:
+    			lv_indev_set_group(my_indev, g_set_clock);
+    			break;
+    		case 6:
+    			lv_indev_set_group(my_indev, g_set_lang);
+    			break;
+    		case 7:
+    			lv_indev_set_group(my_indev, g_set_reset);
+    			break;
 			}
 			ESP_LOGI(TAG, "pussy menu");
 			isEnterPressed = 0;
@@ -776,18 +801,44 @@ void table_tab_cb(lv_event_t* e)
 		}
     }else if(code == LV_EVENT_VALUE_CHANGED ){
     	if(!isEnterPressed){
-    		ESP_LOGI(TAG, "tvoya mat shlyuha");
+    		/*ESP_LOGI(TAG, "tvoya mat shlyuha");
     		ESP_LOGI(TAG, "Row: %d, Col: %d", row, col);
     		if(row == 2){
     			//lv_scr_load(screenTab1);
-    			lv_obj_move_to_index(screenTab1, 1);
+    			lv_obj_move_to_index(scr_set_sound, 7);
 
     			ESP_LOGI(TAG, "index table: %ld", lv_obj_get_index(table_menu));
-    			ESP_LOGI(TAG, "index 1: %ld", lv_obj_get_index(screenTab1));
+    			ESP_LOGI(TAG, "index 1: %ld", lv_obj_get_index(scr_set_sound));
     			ESP_LOGI(TAG, "index 2: %ld", lv_obj_get_index(screenTab2));
     		}else if(row == 3){
     			lv_obj_move_to_index(screenTab2, 1);
 
+    		}*/
+    		switch(row){
+    		case 0:
+    			lv_obj_move_to_index(scr_set_alarm, 7);
+    			break;
+    		case 1:
+    			lv_obj_move_to_index(scr_set_signal, 7);
+    			break;
+    		case 2:
+    			lv_obj_move_to_index(scr_set_sound, 7);
+    			break;
+    		case 3:
+    			lv_obj_move_to_index(scr_set_disp, 7);
+    			break;
+    		case 4:
+    			lv_obj_move_to_index(scr_set_ble, 7);
+    			break;
+    		case 5:
+    			lv_obj_move_to_index(scr_set_clock, 7);
+    			break;
+    		case 6:
+    			lv_obj_move_to_index(scr_set_lang, 7);
+    			break;
+    		case 7:
+    			lv_obj_move_to_index(scr_set_reset, 7);
+    			break;
     		}
     	}
     }
@@ -1962,17 +2013,24 @@ void app_main(void)
 	    ESP_LOGI(TAG, "Initialize LVGL library main");
 	    //lv_init();
 	    //lv_driver_init();
-	    g = lv_group_create();
+	    g = lv_group_create(); //
 	    g_menu = lv_group_create();
 	    g_empty = lv_group_create();
 	    g_widgets = lv_group_create();
 	    g_settings = lv_group_create();
 	    g_coef = lv_group_create();
-	    g_tab = lv_group_create();
-	    g_tab_btn = lv_group_create();
-	    g_table_menu = lv_group_create();
-	    g_table_tab1 = lv_group_create();
-	    g_table_tab2 = lv_group_create();
+	    g_tab = lv_group_create(); //archaic
+	    g_tab_btn = lv_group_create(); //archaic
+	    g_table_menu = lv_group_create(); //
+
+	    g_set_alarm = lv_group_create();;
+	    g_set_signal = lv_group_create();;
+	    g_set_sound = lv_group_create();;
+	    g_set_disp = lv_group_create();;
+	    g_set_ble = lv_group_create();;
+	    g_set_clock = lv_group_create();;
+	    g_set_lang = lv_group_create();;
+	    g_set_reset = lv_group_create();;
 	    lv_group_set_default(g);
 
 	    lv_indev_set_group(my_indev, g);
@@ -1988,7 +2046,10 @@ void app_main(void)
 
 	    led_init();
 	    vTaskDelay(10);
+	    int64_t start_time = esp_timer_get_time();
 	    my_demo2(disp);
+	    int64_t end_time = esp_timer_get_time();
+	    ESP_LOGI(TAG, "Start: %lld\n\rEnd: %lld\n\r", start_time, end_time);
 	    //my_demo_table(disp);
 	    //display_slider();
 	    vTaskDelay(10);

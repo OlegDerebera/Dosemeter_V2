@@ -30,8 +30,15 @@ extern lv_group_t* g_coef;
 extern lv_group_t* g_tab;
 extern lv_group_t* g_tab_btn;
 extern lv_group_t* g_table_menu;
-extern lv_group_t* g_table_tab1;
-extern lv_group_t* g_table_tab2;
+
+extern lv_group_t* g_set_alarm;
+extern lv_group_t* g_set_signal;
+extern lv_group_t* g_set_sound;
+extern lv_group_t* g_set_disp;
+extern lv_group_t* g_set_ble;
+extern lv_group_t* g_set_clock;
+extern lv_group_t* g_set_lang;
+extern lv_group_t* g_set_reset;
 extern lv_obj_t * scr1;
 lv_obj_t * obj2;
 static lv_style_t style2;
@@ -39,6 +46,8 @@ static lv_style_t style_bg;
 static lv_style_t style_greek;
 static lv_style_t style_unit;
 static lv_style_t style_txt;
+static lv_style_t style_radio;
+static lv_style_t style_radio_chk;
 extern char str_adc[10];
 extern lv_obj_t * label_adc;
 lv_obj_t * label_greek_alpha;
@@ -75,6 +84,14 @@ extern lv_obj_t* screenTab;
 extern lv_obj_t* screenTablemenu;
 extern lv_obj_t* screenTab1;
 extern lv_obj_t* screenTab2;
+extern lv_obj_t* scr_set_alarm;
+extern lv_obj_t* scr_set_signal;
+extern lv_obj_t* scr_set_sound;
+extern lv_obj_t* scr_set_disp;
+extern lv_obj_t* scr_set_ble;
+extern lv_obj_t* scr_set_clock;
+extern lv_obj_t* scr_set_lang;
+extern lv_obj_t* scr_set_reset;
 extern lv_obj_t* tabview;
 //-----------------------------
 char* str[7];
@@ -207,6 +224,12 @@ void my_demo2(lv_disp_t *disp)
 
     lv_style_init(&style_bg);
     lv_style_set_bg_color(&style_bg, lv_color_black());
+
+    lv_style_init(&style_radio);
+    lv_style_set_radius(&style_radio, LV_RADIUS_CIRCLE);
+
+    lv_style_init(&style_radio_chk);
+    lv_style_set_bg_img_src(&style_radio_chk, NULL);
 
 
     //Home screen
@@ -572,116 +595,198 @@ void my_demo2(lv_disp_t *disp)
 	table_menu = lv_table_create(screenTablemenu);
 	lv_obj_clear_flag(table_menu, LV_OBJ_FLAG_SCROLLABLE);
 
-	lv_table_set_cell_value(table_menu, 0, 0, "Pidor");
+	lv_table_set_cell_value(table_menu, 0, 0, "Alarm");	//tryvoga
 
-    lv_table_set_cell_value(table_menu, 1, 0, "Pizda");	//coef
+    lv_table_set_cell_value(table_menu, 1, 0, "Signal");
 
-    lv_table_set_cell_value(table_menu, 2, 0, "Xyi");	//widget
+    lv_table_set_cell_value(table_menu, 2, 0, "Sound");	//widget
 
-    lv_table_set_cell_value(table_menu, 3, 0, "Malafia");	//sett
+    lv_table_set_cell_value(table_menu, 3, 0, "Display");	//sett
 
-    lv_table_set_cell_value(table_menu, 4, 0, "About");	//tabview
+    lv_table_set_cell_value(table_menu, 4, 0, "Bluetooth");	//tabview
+
+    lv_table_set_cell_value(table_menu, 5, 0, "Clock");	//tabview
+
+    lv_table_set_cell_value(table_menu, 6, 0, "Lang");	//tabview
+
+    lv_table_set_cell_value(table_menu, 7, 0, "Reset");	// skynuty
+
 
     lv_obj_set_size(table_menu, 80, lv_pct(103));
     lv_table_set_col_width(table_menu, 0, 80);
     lv_obj_set_align(table_menu, LV_ALIGN_LEFT_MID);
 
-
-
     lv_obj_add_style(table_menu, &style_bg, LV_PART_ITEMS);
     lv_obj_add_style(table_menu, &style_bg, LV_PART_MAIN);
     lv_obj_set_style_border_width(table_menu, 0, LV_PART_ITEMS);
     lv_obj_set_style_border_width(table_menu, 0, LV_PART_MAIN);
+    lv_obj_set_style_outline_width(table_menu, 0, LV_STATE_EDITED);
     lv_obj_set_style_text_font(table_menu, &lv_font_montserrat_16, LV_PART_ITEMS);
 
-    lv_obj_add_event_cb(table_menu, draw_event_cb, LV_EVENT_DRAW_PART_END, NULL);
     lv_obj_add_event_cb(table_menu, table_tab_cb, LV_EVENT_ALL, NULL);
 
-    //lv_group_set_default(g_table_tab1);
-    screenTab1 = lv_obj_create(screenTablemenu);
-    lv_obj_set_size(screenTab1, lv_pct(103), lv_pct(103));
+    lv_group_set_default(g_set_alarm);
+    scr_set_alarm = lv_obj_create(screenTablemenu);
+    lv_obj_set_size(scr_set_alarm, lv_pct(103), lv_pct(103));
 
-    lv_obj_align(screenTab1, LV_ALIGN_RIGHT_MID, 0, 0);
-    lv_obj_set_scrollbar_mode(screenTab1, LV_SCROLLBAR_MODE_OFF);
-    lv_obj_set_style_bg_color(screenTab1, lv_color_white(), LV_PART_MAIN);
+    lv_obj_align(scr_set_alarm, LV_ALIGN_RIGHT_MID, 0, 0);
+    lv_obj_set_scrollbar_mode(scr_set_alarm, LV_SCROLLBAR_MODE_OFF);
+    lv_obj_add_style(scr_set_alarm, &style_bg, LV_PART_MAIN);
+
+
+    cb = lv_checkbox_create(scr_set_alarm);
+    lv_checkbox_set_text(cb, "Alarm On/Off");
+    lv_obj_add_style(cb, &style_txt, LV_PART_MAIN);
+    lv_obj_set_pos(cb, 90, 30);
+    lv_obj_add_event_cb(cb, checkbox_cb, LV_EVENT_ALL, NULL);
+    lv_group_add_obj(g_set_alarm, cb);
+
+    cb= lv_checkbox_create(scr_set_alarm);
+    lv_checkbox_set_text(cb, "radio");
+    lv_obj_add_flag(cb, LV_OBJ_FLAG_EVENT_BUBBLE);
+    lv_obj_add_style(cb, &style_radio, LV_PART_INDICATOR);
+    lv_obj_add_style(cb, &style_radio_chk, LV_PART_INDICATOR | LV_STATE_CHECKED);
+    lv_obj_set_pos(cb, 90, 50);
 
     lv_obj_t * label_pidor;
-    label_pidor = lv_label_create(screenTab1);
-    lv_label_set_text(label_pidor, "PIDOR");
-    lv_obj_center(label_pidor);
 
-    lv_group_set_default(g_table_tab1);
-    lv_obj_t* button_tab = lv_btn_create(screenTab1);
-    lv_group_add_obj(g_table_tab1, button_tab);
+    lv_group_set_default(g_set_alarm);
+    lv_obj_t* button_tab = lv_btn_create(scr_set_alarm);
+    lv_group_add_obj(g_set_alarm, button_tab);
     lv_obj_set_pos(button_tab, 200, 20);
     lv_obj_add_event_cb(button_tab, btn_back_cb, LV_EVENT_PRESSED, NULL);
 
 
-    //lv_group_set_default(g_table_tab1);
-    screenTab2 = lv_obj_create(screenTablemenu);
-    lv_obj_set_size(screenTab2, lv_pct(103), lv_pct(103));
+    //lv_group_set_default(g_set_alarm);
+    scr_set_signal = lv_obj_create(screenTablemenu);
+    lv_obj_set_size(scr_set_signal, lv_pct(103), lv_pct(103));
 
-    lv_obj_align(screenTab2, LV_ALIGN_RIGHT_MID, 0, 0);
-    lv_obj_set_scrollbar_mode(screenTab2, LV_SCROLLBAR_MODE_OFF);
-    lv_obj_set_style_bg_color(screenTab2, lv_palette_main(LV_PALETTE_AMBER), LV_PART_MAIN);
-    label_pidor = lv_label_create(screenTab2);
+    lv_obj_align(scr_set_signal, LV_ALIGN_RIGHT_MID, 0, 0);
+    lv_obj_set_scrollbar_mode(scr_set_signal, LV_SCROLLBAR_MODE_OFF);
+    lv_obj_add_style(scr_set_signal, &style_bg, LV_PART_MAIN);
+
+    label_pidor = lv_label_create(scr_set_signal);
     lv_label_set_text(label_pidor, "PIZda");
     lv_obj_center(label_pidor);
 
-    lv_group_set_default(g_table_tab2);
-    lv_obj_t* button_tab2 = lv_btn_create(screenTab2);
-    lv_group_add_obj(g_table_tab2, button_tab2);
+    lv_group_set_default(g_set_signal);
+    lv_obj_t* button_tab2 = lv_btn_create(scr_set_signal);
+    lv_group_add_obj(g_set_signal, button_tab2);
     lv_obj_set_pos(button_tab2, 200, 50);
     lv_obj_add_event_cb(button_tab2, btn_back_cb, LV_EVENT_PRESSED, NULL);
 
+    scr_set_sound = lv_obj_create(screenTablemenu);
+    lv_obj_set_size(scr_set_sound, lv_pct(103), lv_pct(103));
 
+    lv_obj_align(scr_set_sound, LV_ALIGN_RIGHT_MID, 0, 0);
+    lv_obj_set_scrollbar_mode(scr_set_sound, LV_SCROLLBAR_MODE_OFF);
+    lv_obj_add_style(scr_set_sound, &style_bg, LV_PART_MAIN);
 
-    cb = lv_checkbox_create(screenTab2);
+    label_pidor = lv_label_create(scr_set_sound);
+    lv_label_set_text(label_pidor, "Sound");
+    lv_obj_center(label_pidor);
+
+    scr_set_disp = lv_obj_create(screenTablemenu);
+    lv_obj_set_size(scr_set_disp, lv_pct(103), lv_pct(103));
+
+    lv_obj_align(scr_set_disp, LV_ALIGN_RIGHT_MID, 0, 0);
+    lv_obj_set_scrollbar_mode(scr_set_disp, LV_SCROLLBAR_MODE_OFF);
+    lv_obj_add_style(scr_set_disp, &style_bg, LV_PART_MAIN);
+
+    label_pidor = lv_label_create(scr_set_disp);
+    lv_label_set_text(label_pidor, "Display");
+    lv_obj_center(label_pidor);
+
+    scr_set_ble = lv_obj_create(screenTablemenu);
+    lv_obj_set_size(scr_set_ble, lv_pct(103), lv_pct(103));
+
+    lv_obj_align(scr_set_ble, LV_ALIGN_RIGHT_MID, 0, 0);
+    lv_obj_set_scrollbar_mode(scr_set_ble, LV_SCROLLBAR_MODE_OFF);
+    lv_obj_add_style(scr_set_ble, &style_bg, LV_PART_MAIN);
+
+    label_pidor = lv_label_create(scr_set_ble);
+    lv_label_set_text(label_pidor, "Bluetooth");
+    lv_obj_center(label_pidor);
+
+    scr_set_clock = lv_obj_create(screenTablemenu);
+    lv_obj_set_size(scr_set_clock, lv_pct(103), lv_pct(103));
+
+    lv_obj_align(scr_set_clock, LV_ALIGN_RIGHT_MID, 0, 0);
+    lv_obj_set_scrollbar_mode(scr_set_clock, LV_SCROLLBAR_MODE_OFF);
+    lv_obj_add_style(scr_set_clock, &style_bg, LV_PART_MAIN);
+
+    label_pidor = lv_label_create(scr_set_clock);
+    lv_label_set_text(label_pidor, "Clock");
+    lv_obj_center(label_pidor);
+
+    scr_set_lang = lv_obj_create(screenTablemenu);
+    lv_obj_set_size(scr_set_lang, lv_pct(103), lv_pct(103));
+
+    lv_obj_align(scr_set_lang, LV_ALIGN_RIGHT_MID, 0, 0);
+    lv_obj_set_scrollbar_mode(scr_set_lang, LV_SCROLLBAR_MODE_OFF);
+    lv_obj_add_style(scr_set_lang, &style_bg, LV_PART_MAIN);
+
+    label_pidor = lv_label_create(scr_set_lang);
+    lv_label_set_text(label_pidor, "Lang");
+    lv_obj_center(label_pidor);
+
+    scr_set_reset = lv_obj_create(screenTablemenu);
+    lv_obj_set_size(scr_set_reset, lv_pct(103), lv_pct(103));
+
+    lv_obj_align(scr_set_reset, LV_ALIGN_RIGHT_MID, 0, 0);
+    lv_obj_set_scrollbar_mode(scr_set_reset, LV_SCROLLBAR_MODE_OFF);
+    lv_obj_add_style(scr_set_reset, &style_bg, LV_PART_MAIN);
+
+    label_pidor = lv_label_create(scr_set_reset);
+    lv_label_set_text(label_pidor, "Reset");
+    lv_obj_center(label_pidor);
+
+    cb = lv_checkbox_create(scr_set_signal);
     lv_checkbox_set_text(cb, "Banana");
     lv_obj_add_style(cb, &style_txt, LV_PART_MAIN);
     lv_obj_set_pos(cb, 100, 30);
     lv_obj_add_state(cb, LV_STATE_CHECKED);
     lv_obj_add_event_cb(cb, checkbox_cb, LV_EVENT_ALL, NULL);
-    lv_group_add_obj(g_table_tab2, cb);
+    lv_group_add_obj(g_set_signal, cb);
 
-    cb = lv_checkbox_create(screenTab2);
+    cb = lv_checkbox_create(scr_set_signal);
     lv_checkbox_set_text(cb, "kiwi");
     lv_obj_add_style(cb, &style_txt, LV_PART_MAIN);
     lv_obj_set_pos(cb, 100, 60);
     lv_obj_add_state(cb, LV_STATE_CHECKED);
     lv_obj_add_event_cb(cb, checkbox_cb, LV_EVENT_ALL, NULL);
-    lv_group_add_obj(g_table_tab2, cb);
+    lv_group_add_obj(g_set_signal, cb);
 
-    cb = lv_checkbox_create(screenTab2);
+    cb = lv_checkbox_create(scr_set_signal);
     lv_checkbox_set_text(cb, "potato");
     lv_obj_add_style(cb, &style_txt, LV_PART_MAIN);
     lv_obj_set_pos(cb, 100, 90);
     lv_obj_add_state(cb, LV_STATE_CHECKED);
     lv_obj_add_event_cb(cb, checkbox_cb, LV_EVENT_ALL, NULL);
-    lv_group_add_obj(g_table_tab2, cb);
+    lv_group_add_obj(g_set_signal, cb);
 
-    cb = lv_checkbox_create(screenTab2);
+    cb = lv_checkbox_create(scr_set_signal);
     lv_checkbox_set_text(cb, "Lemon");
     lv_obj_add_style(cb, &style_txt, LV_PART_MAIN);
     lv_obj_set_pos(cb, 100, 120);
     //lv_obj_add_state(cb, LV_STATE_DISABLED);
     lv_obj_add_event_cb(cb, checkbox_cb, LV_EVENT_PRESSED, NULL);
-    lv_group_add_obj(g_table_tab2, cb);
+    lv_group_add_obj(g_set_signal, cb);
 
-    cb = lv_checkbox_create(screenTab2);
+    cb = lv_checkbox_create(scr_set_signal);
     //lv_obj_add_state(cb, LV_STATE_CHECKED | LV_STATE_DISABLED);
     lv_checkbox_set_text(cb, "Melon");
     lv_obj_add_style(cb, &style_txt, LV_PART_MAIN);
     lv_obj_set_pos(cb, 100, 150);
     lv_obj_add_event_cb(cb, checkbox_cb, LV_EVENT_ALL, NULL);
-    lv_group_add_obj(g_table_tab2, cb);
+    lv_group_add_obj(g_set_signal, cb);
 
-    cb = lv_checkbox_create(screenTab2);
+    cb = lv_checkbox_create(scr_set_signal);
     lv_checkbox_set_text(cb, "Grape");
     lv_obj_add_style(cb, &style_txt, LV_PART_MAIN);
     lv_obj_set_pos(cb, 100, 200);
     lv_obj_add_event_cb(cb, checkbox_cb, LV_EVENT_ALL, NULL);
-    lv_group_add_obj(g_table_tab2, cb);
+    lv_group_add_obj(g_set_signal, cb);
 
     //lv_obj_add_event_cb(table_widgets, change_event_cb, LV_EVENT_VALUE_CHANGED, NULL);
     lv_obj_move_foreground(table_menu);

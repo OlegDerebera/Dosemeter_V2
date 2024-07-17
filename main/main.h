@@ -119,7 +119,7 @@
 #define FAST_INCREMENT_INTERVAL 	100 // milliseconds
 
 #define SENSOR_PIN					GPIO_NUM_18
-#define BUZZER_PIN					GPIO_NUM_12
+#define BUZZER_PIN					GPIO_NUM_12	//12
 #define GPIO_UP						0	//10
 #define GPIO_DOWN					3
 #define GPIO_ENTER					14
