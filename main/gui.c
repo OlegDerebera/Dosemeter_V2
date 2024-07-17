@@ -18,6 +18,7 @@ extern void table_coef_event_cb(lv_event_t* e);
 extern void tabview_cb(lv_event_t * e);
 extern void checkbox_cb(lv_event_t * e);
 extern void table_tab_cb(lv_event_t* e);
+extern void cb_radio_cb(lv_event_t * e);
 
 extern const char *TAG;
 
@@ -93,6 +94,9 @@ extern lv_obj_t* scr_set_clock;
 extern lv_obj_t* scr_set_lang;
 extern lv_obj_t* scr_set_reset;
 extern lv_obj_t* tabview;
+lv_obj_t* cb1;
+lv_obj_t* cb2;
+lv_obj_t* cb3;
 //-----------------------------
 char* str[7];
 extern const char unit_arr[3][6];
@@ -527,7 +531,7 @@ void my_demo2(lv_disp_t *disp)
     //lv_obj_set_flex_align(tab1, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER);
 
     lv_obj_t * cb;
-    lv_obj_t * cb2;
+
     /*cb = lv_checkbox_create(tab1);
     lv_checkbox_set_text(cb, "Apple");
     lv_obj_add_event_cb(cb, checkbox_cb, LV_EVENT_ALL, NULL);
@@ -546,13 +550,16 @@ void my_demo2(lv_disp_t *disp)
     lv_checkbox_set_text(cb, "kiwi");
     lv_obj_add_style(cb, &style_txt, LV_PART_MAIN);
     lv_obj_set_pos(cb, 10, 60);
-    lv_obj_add_state(cb, LV_STATE_CHECKED);
+    lv_obj_add_state(cb, LV_STATE_CHECKED | LV_STATE_DISABLED);
     lv_obj_add_event_cb(cb, checkbox_cb, LV_EVENT_ALL, NULL);
     lv_group_add_obj(g_tab_btn, cb);
 
     cb = lv_checkbox_create(tab1);
     lv_checkbox_set_text(cb, "potato");
     lv_obj_add_style(cb, &style_txt, LV_PART_MAIN);
+    lv_obj_set_style_opa(cb, LV_OPA_80, LV_PART_MAIN | LV_PART_INDICATOR);
+    lv_color_t color = lv_obj_get_style_bg_color(cb, LV_PART_INDICATOR);
+    lv_obj_set_style_bg_color(cb, lv_palette_lighten(LV_PALETTE_BLUE, 3), LV_PART_INDICATOR);
     lv_obj_set_pos(cb, 10, 90);
     lv_obj_add_state(cb, LV_STATE_CHECKED);
     lv_obj_add_event_cb(cb, checkbox_cb, LV_EVENT_ALL, NULL);
@@ -641,21 +648,37 @@ void my_demo2(lv_disp_t *disp)
     lv_obj_add_event_cb(cb, checkbox_cb, LV_EVENT_ALL, NULL);
     lv_group_add_obj(g_set_alarm, cb);
 
-    cb= lv_checkbox_create(scr_set_alarm);
-    lv_checkbox_set_text(cb, "radio");
-    lv_obj_add_flag(cb, LV_OBJ_FLAG_EVENT_BUBBLE);
-    lv_obj_add_style(cb, &style_radio, LV_PART_INDICATOR);
-    lv_obj_add_style(cb, &style_radio_chk, LV_PART_INDICATOR | LV_STATE_CHECKED);
-    lv_obj_set_pos(cb, 90, 50);
+    cb1 = lv_checkbox_create(scr_set_alarm);
+    lv_checkbox_set_text(cb1, "Auto");
+    lv_obj_add_flag(cb1, LV_OBJ_FLAG_EVENT_BUBBLE);
+    lv_obj_add_state(cb1, LV_STATE_CHECKED | LV_STATE_DISABLED);
+    lv_obj_add_style(cb1, &style_radio, LV_PART_INDICATOR);
+    lv_obj_add_style(cb1, &style_radio_chk, LV_PART_INDICATOR | LV_STATE_CHECKED);
+    lv_obj_add_style(cb1, &style_txt, LV_PART_MAIN);
+    lv_obj_set_pos(cb1, 90, 60);
+    lv_obj_add_event_cb(cb1, cb_radio_cb, LV_EVENT_CLICKED, NULL);
+
+    cb2 = lv_checkbox_create(scr_set_alarm);
+    lv_checkbox_set_text(cb2, "Manual reset");
+    lv_obj_add_flag(cb2, LV_OBJ_FLAG_EVENT_BUBBLE);
+    lv_obj_add_state(cb2, LV_STATE_DISABLED);
+    lv_obj_add_style(cb2, &style_radio, LV_PART_INDICATOR);
+    lv_obj_add_style(cb2, &style_radio_chk, LV_PART_INDICATOR | LV_STATE_CHECKED);
+    lv_obj_add_style(cb2, &style_txt, LV_PART_MAIN);
+    lv_obj_set_pos(cb2, 90, 90);
+    lv_obj_add_event_cb(cb2, cb_radio_cb, LV_EVENT_CLICKED, NULL);
+
+    cb3 = lv_checkbox_create(scr_set_alarm);
+    lv_checkbox_set_text(cb3, "One time");
+    lv_obj_add_flag(cb3, LV_OBJ_FLAG_EVENT_BUBBLE);
+    lv_obj_add_state(cb3, LV_STATE_DISABLED);
+    lv_obj_add_style(cb3, &style_radio, LV_PART_INDICATOR);
+    lv_obj_add_style(cb3, &style_radio_chk, LV_PART_INDICATOR | LV_STATE_CHECKED);
+    lv_obj_add_style(cb3, &style_txt, LV_PART_MAIN);
+    lv_obj_set_pos(cb3, 90, 120);
+    lv_obj_add_event_cb(cb3, cb_radio_cb, LV_EVENT_CLICKED, NULL);
 
     lv_obj_t * label_pidor;
-
-    lv_group_set_default(g_set_alarm);
-    lv_obj_t* button_tab = lv_btn_create(scr_set_alarm);
-    lv_group_add_obj(g_set_alarm, button_tab);
-    lv_obj_set_pos(button_tab, 200, 20);
-    lv_obj_add_event_cb(button_tab, btn_back_cb, LV_EVENT_PRESSED, NULL);
-
 
     //lv_group_set_default(g_set_alarm);
     scr_set_signal = lv_obj_create(screenTablemenu);

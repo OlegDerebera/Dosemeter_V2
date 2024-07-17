@@ -199,6 +199,9 @@ lv_obj_t* scr_set_clock;
 lv_obj_t* scr_set_lang;
 lv_obj_t* scr_set_reset;
 lv_obj_t* tabview;
+extern lv_obj_t* cb1;
+extern lv_obj_t* cb2;
+extern lv_obj_t* cb3;
 //-----------------------------------------------
 uint8_t inMenu = 0;
 uint8_t inTabview = 0;
@@ -674,6 +677,27 @@ void tabview_cb(lv_event_t * e)
             }
         }
     }*/
+}
+
+void cb_radio_cb(lv_event_t * e){
+
+	//static lv_obj_t* old_cb1 =
+    uint8_t cb_number = lv_event_get_user_data(e);
+    lv_obj_t * cont = lv_event_get_current_target(e);
+    lv_obj_t * act_cb = lv_event_get_target(e);
+
+    ESP_LOGI(TAG, "eblo 1");
+    /*Do nothing if the container was clicked*/
+    if (act_cb != cb1) lv_obj_clear_state(cb1, LV_STATE_CHECKED);
+    ESP_LOGI(TAG, "eblo 21");
+    if (act_cb != cb2) lv_obj_clear_state(cb2, LV_STATE_CHECKED);
+    ESP_LOGI(TAG, "eblo 22");
+    if (act_cb != cb3) lv_obj_clear_state(cb3, LV_STATE_CHECKED);
+
+    ESP_LOGI(TAG, "eblo 2");
+    lv_obj_add_state(act_cb, LV_STATE_CHECKED);     /*Uncheck the current radio button*/
+    ESP_LOGI(TAG, "eblo 3");
+
 }
 
 void checkbox_cb(lv_event_t * e)
